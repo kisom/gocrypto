@@ -14,9 +14,23 @@ func FailWithError(t *testing.T, err error) {
 	t.FailNow()
 }
 
-func TestGenerateSymmetricKey(t *testing.T) {
-	fmt.Printf("GenerateSymmetricKey: ")
-	key, err := GenerateSymmetricKey()
+func TestGenerateKey(t *testing.T) {
+	fmt.Printf("GenerateKey: ")
+	key, err := GenerateKey()
+	if err != nil || len(key) != KeySize {
+		FailWithError(t, err)
+	}
+	fmt.Println("ok")
+}
+
+func TestGenerateLTKey(t *testing.T) {
+	fmt.Printf("GenerateLTKey: ")
+	if SecureLevel < 1 {
+		err := fmt.Errorf("crypto library operating in degraded mode")
+		FailWithError(t, err)
+	}
+
+	key, err := GenerateLTKey()
 	if err != nil || len(key) != KeySize {
 		FailWithError(t, err)
 	}
@@ -63,7 +77,7 @@ func TestUnpadBlock(t *testing.T) {
 		p, err := Pad(m[i])
 		if err != nil {
 			FailWithError(t, err)
-		} else if len(p) % BlockSize != 0 {
+		} else if len(p)%BlockSize != 0 {
 			err = fmt.Errorf("len(p): %d", len(p))
 			FailWithError(t, err)
 		}
@@ -83,7 +97,7 @@ func TestEncryptBlock(t *testing.T) {
 	m := []byte("Hello, world.")
 	fmt.Printf("Encrypt block: ")
 
-	key, err := GenerateSymmetricKey()
+	key, err := GenerateKey()
 	if err != nil {
 		FailWithError(t, err)
 	}
@@ -105,11 +119,41 @@ func TestEncryptBlock(t *testing.T) {
 	fmt.Println("ok")
 }
 
+func BenchmarkGenerateKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		key, err := GenerateKey()
+		if err != nil || len(key) != KeySize {
+			b.FailNow()
+		}
+		Zeroise(key)
+	}
+}
+
+func BenchmarkGenerateLTKey(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		key, err := GenerateLTKey()
+		if err != nil || len(key) != KeySize {
+			b.FailNow()
+		}
+		Zeroise(key)
+	}
+}
+
+func BenchmarkGenerateIV(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		iv, err := GenerateIV()
+		if err != nil || len(iv) != BlockSize {
+			b.FailNow()
+		}
+		Zeroise(iv)
+	}
+}
+
 func BenchmarkEncryptBlock(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		m := []byte("Hello, world.")
 
-		key, err := GenerateSymmetricKey()
+		key, err := GenerateKey()
 		if err != nil {
 			fmt.Println("symkey")
 			fmt.Println(err.Error())
@@ -139,7 +183,7 @@ func BenchmarkEncryptBlock(b *testing.B) {
 
 func BenchmarkScrubKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		key, err := GenerateSymmetricKey()
+		key, err := GenerateKey()
 		if err != nil {
 			b.FailNow()
 		}
