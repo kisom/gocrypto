@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
+	"os"
 )
 
 type Encrypted struct {
@@ -16,17 +17,47 @@ type Encrypted struct {
 	IV         []byte
 }
 
-// Generate a symmetric key.
-func GenerateSymmetricKey() (key []byte, err error) {
+var (
+	devRandom *os.File
+	SecureLevel = 0
+)
+
+func init() {
+	var err error
+
+	devRandom, err = os.Open("/dev/random")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "*** failed to open /dev/random")
+		fmt.Fprintf(os.Stderr, "    long-term key generation not recommended")
+	} else {
+		SecureLevel = 1
+	}
+}
+
+// Generate a symmetric key. This is suitable for session keys
+// and other short-term key material.
+func GenerateKey() (key []byte, err error) {
 	key = make([]byte, KeySize)
 
-	if len(key) != KeySize {
-		err = fmt.Errorf("invalid key size")
-		return
-	}
 	n, err := io.ReadFull(rand.Reader, key)
 	if err == nil && n != KeySize {
 		err = fmt.Errorf("[key] invalid random read size %d", n)
+	}
+	return
+}
+
+// Generates a long-term (LT) key. It uses the `/dev/random`
+// device, and will typically be much slower than GenerateKey.
+func GenerateLTKey() (key []byte, err error) {
+	if devRandom == nil {
+		err = DegradedError
+		return
+	}
+	key = make([]byte, KeySize)
+
+	n, err := io.ReadFull(devRandom, key)
+	if err == nil && n != KeySize {
+		err = fmt.Errorf("[key] invalid random read size %d", n)	
 	}
 	return
 }
@@ -84,9 +115,10 @@ func Decrypt(key []byte, e *Encrypted) (m []byte, err error) {
 
 // Implement the standard padding scheme for block ciphers. This
 // scheme uses 0x80 as the first non-NULL padding byte, and 0x00 to
-// pad out the data to a multiple of the block length as required.  If
-// the message is a multiple of the block size, add a full block of
-// padding. Note that the message is copied
+// pad out the data to a multiple of the block length as required.
+// If the message is a multiple of the block size, add a full block
+// of padding. Note that the message is copied, and the original
+// isn't touched.
 func Pad(m []byte) (p []byte, err error) {
 	mLen := len(m)
 
@@ -98,7 +130,7 @@ func Pad(m []byte) (p []byte, err error) {
 		return
 	}
 
-	padding := BlockSize - mLen % BlockSize
+	padding := BlockSize - mLen%BlockSize
 
 	p = append(p, 0x80)
 	for i := 1; i < padding; i++ {
