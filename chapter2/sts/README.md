@@ -22,3 +22,7 @@ example,
     [+] retrieved time:
          2013-02-14 21:40:38 -0700 MST
     <ono-sendai: chapter2/sts> $
+
+the server searches the current directory for the key `server.key`; the
+client program searches for `client.key`. if the key isn't found, the
+program aborts.
