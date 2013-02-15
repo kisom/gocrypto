@@ -15,4 +15,5 @@ var Cipher = aes.NewCipher
 var (
 	PaddingError = fmt.Errorf("invalid padding")
 	DegradedError = fmt.Errorf("package is in degraded mode")
+	BadBlockError = fmt.Errorf("bad block")
 )

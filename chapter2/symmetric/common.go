@@ -72,6 +72,42 @@ func GenerateIV() (iv []byte, err error) {
 	return
 }
 
+
+// Zeroise wipes out the data in a slice before deleting the array.
+func Zeroise(data []byte) (n int) {
+	dLen := len(data)
+
+	for n = 0; n < dLen; n++ {
+		data[n] = 0x0
+	}
+
+	data = []byte{}
+	return
+}
+
+// Scrub writes random data to the variable the given number of
+// rounds, then zeroises it.
+func Scrub(data []byte, rounds int) (err error) {
+	dLen := len(data)
+
+	var n int
+	for r := 0; r < rounds; r++ {
+		for i := 0; i < dLen; i++ {
+			n, err = io.ReadFull(rand.Reader, data)
+			if err != nil {
+				return
+			} else if n != dLen {
+				err = fmt.Errorf("[scrub] invalid random read size %d", n)
+				return
+			}
+		}
+	}
+	if dLen != Zeroise(data) {
+		err = fmt.Errorf("zeroise failed")
+	}
+	return
+}
+
 // Encrypt a byte slice.
 func Encrypt(key, data []byte) (e *Encrypted, err error) {
 	m, err := Pad(data)
@@ -97,7 +133,7 @@ func Encrypt(key, data []byte) (e *Encrypted, err error) {
 }
 
 // Decrypt ciphertext.
-func Decrypt(key []byte, e *Encrypted) (m []byte, err error) {
+func (e *Encrypted) Decrypt(key []byte) (m []byte, err error) {
 	m = make([]byte, len(e.Ciphertext))
 	pt := make([]byte, len(e.Ciphertext))
 
@@ -111,6 +147,28 @@ func Decrypt(key []byte, e *Encrypted) (m []byte, err error) {
 
 	m, err = Unpad(pt)
 	return
+}
+
+// ToByte converts the Encrypted struct to a byte slice, suitable, for
+// example, for sending data on the network.
+func (e *Encrypted) ToByte() (out []byte) {
+	out = make([]byte, BlockSize)
+	copy(out, e.IV)
+	out = append(out, e.Ciphertext...)
+	return out
+}
+
+// FromByte returns a pointer to an Encrypted struct from a byte
+// slice, i.e. for messages that have come off the wire.
+func FromByte(msg []byte) (e *Encrypted) {
+	e = new(Encrypted)
+	e.IV = make([]byte, BlockSize)
+	copy(e.IV, msg)
+
+	ct := msg[BlockSize:]
+	e.Ciphertext = make([]byte, len(ct))
+	copy(e.Ciphertext, ct)
+	return e
 }
 
 // Implement the standard padding scheme for block ciphers. This
@@ -163,44 +221,5 @@ func Unpad(p []byte) (m []byte, err error) {
 
 	m = make([]byte, pLen)
 	copy(m, p)
-	return
-}
-
-func EncryptOut(key, r io.Reader, w io.Writer) (err error) {
-	return
-}
-
-// Zeroise wipes out the data in a slice before deleting the array.
-func Zeroise(data []byte) (n int) {
-	dLen := len(data)
-
-	for n = 0; n < dLen; n++ {
-		data[n] = 0x0
-	}
-
-	data = []byte{}
-	return
-}
-
-// Scrub writes random data to the variable the given number of
-// rounds, then zeroises it.
-func Scrub(data []byte, rounds int) (err error) {
-	dLen := len(data)
-
-	var n int
-	for r := 0; r < rounds; r++ {
-		for i := 0; i < dLen; i++ {
-			n, err = io.ReadFull(rand.Reader, data)
-			if err != nil {
-				return
-			} else if n != dLen {
-				err = fmt.Errorf("[scrub] invalid random read size %d", n)
-				return
-			}
-		}
-	}
-	if dLen != Zeroise(data) {
-		err = fmt.Errorf("zeroise failed")
-	}
 	return
 }
