@@ -26,7 +26,7 @@ func main() {
         }
 
         keyCount := 0
-        fmt.Printf("[+] generating %d keys\n", flag.NArg())
+        fmt.Printf("[+] generating %d keys: ", flag.NArg())
         for i, keyFile := range flag.Args() {
 
                 key, err := KeyGenerator()
