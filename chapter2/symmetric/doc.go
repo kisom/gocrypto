@@ -24,5 +24,5 @@
    book. Keys may be generated with the GenerateKey function, and
    encryption and decryption is done with the Encrypt and Decrypt
    functions, which automatically pad and unpad the data.
- */
+*/
 package symmetric

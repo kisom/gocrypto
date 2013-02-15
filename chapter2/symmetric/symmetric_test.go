@@ -170,7 +170,7 @@ func TestEncryptReader(t *testing.T) {
 	if err != nil {
 		FailWithError(t, err)
 	}
-	
+
 	err = EncryptReader(testKey, src, out)
 	if err != nil {
 		FailWithError(t, err)
@@ -181,7 +181,7 @@ func TestEncryptReader(t *testing.T) {
 	if err != nil {
 		FailWithError(t, err)
 	}
-	expected := (fi.Size() / BlockSize) * BlockSize + (2 * BlockSize)
+	expected := (fi.Size()/BlockSize)*BlockSize + (2 * BlockSize)
 	fi, err = os.Stat(testOut)
 	if err != nil {
 		err = fmt.Errorf("[testOut] %s", err.Error())
@@ -193,7 +193,7 @@ func TestEncryptReader(t *testing.T) {
 			fi.Size(), expected)
 	}
 	if err != nil {
-		FailWithError(t, err)	
+		FailWithError(t, err)
 	}
 
 	fmt.Println("ok")
@@ -212,7 +212,7 @@ func TestDecryptReader(t *testing.T) {
 	if err != nil {
 		FailWithError(t, err)
 	}
-	
+
 	err = DecryptReader(testKey, src, out)
 	if err != nil {
 		FailWithError(t, err)
@@ -238,7 +238,7 @@ func TestDecryptReader(t *testing.T) {
 	os.Remove(testEnc)
 	os.Remove(testOut)
 	if err != nil {
-		FailWithError(t, err)	
+		FailWithError(t, err)
 	}
 
 	fmt.Println("ok")
@@ -259,7 +259,7 @@ func TestEncryptFile(t *testing.T) {
 		FailWithError(t, err)
 	}
 
-	expected := (fi.Size() / BlockSize) * BlockSize + (2 * BlockSize)
+	expected := (fi.Size()/BlockSize)*BlockSize + (2 * BlockSize)
 	fi, err = os.Stat(testEnc)
 	if err != nil {
 		err = fmt.Errorf("[testEnc] %s", err.Error())
@@ -271,7 +271,7 @@ func TestEncryptFile(t *testing.T) {
 			fi.Size(), expected)
 	}
 	if err != nil {
-		FailWithError(t, err)	
+		FailWithError(t, err)
 	}
 
 	fmt.Println("ok")
@@ -305,7 +305,7 @@ func TestDecryptFile(t *testing.T) {
 	os.Remove(testEnc)
 	os.Remove(testOut)
 	if err != nil {
-		FailWithError(t, err)	
+		FailWithError(t, err)
 	}
 
 	fmt.Println("ok")
@@ -320,15 +320,36 @@ func TestByteCrypt(t *testing.T) {
 	if err != nil {
 		FailWithError(t, err)
 	}
-	enc := e.ToByte()
+	enc := e.ToBytes()
 
-	dec, err := FromByte(enc).Decrypt(testKey)
+	dec, err := FromBytes(enc).Decrypt(testKey)
 	if err != nil {
 		FailWithError(t, err)
 	} else if !bytes.Equal(dec, msg) {
 		FailWithError(t, nil)
 	}
 	fmt.Println("ok")
+}
+
+func TestByteCrypt2(t *testing.T) {
+	msg := []byte("Hello, world. Hallo, welt.")
+
+        fmt.Printf("CryptBytes: ")
+        enc, err := EncryptBytes(testKey, msg)
+        if err != nil {
+                FailWithError(t, err)
+        }
+
+        dec, err := DecryptBytes(testKey, enc)
+        if err != nil {
+                FailWithError(t, err)
+        }
+
+        if !bytes.Equal(msg, dec) {
+                err = fmt.Errorf("decryption failed")
+                FailWithError(t, err)
+        }
+        fmt.Println("ok")
 }
 
 // Benchmark the generation of session keys.
@@ -410,4 +431,26 @@ func BenchmarkScrubKey(b *testing.B) {
 			b.FailNow()
 		}
 	}
+}
+
+
+// Benchmark encrypting and decrypting to bytes.
+func BenchmarkByteCrypt(b *testing.B) {
+	msg := []byte("Hello, world. Hallo, welt.")
+
+        for i := 0; i < b.N; i++ {
+                enc, err := EncryptBytes(testKey, msg)
+                    if err != nil {
+                            b.FailNow()
+                    }
+
+                dec, err := DecryptBytes(testKey, enc)
+                    if err != nil {
+                            b.FailNow()
+                    }
+
+                if !bytes.Equal(msg, dec) {
+                        b.FailNow()
+                }
+        }
 }

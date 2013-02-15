@@ -47,7 +47,7 @@ func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 				return
 			}
 		}
-		
+
 		ct := make([]byte, len(block))
 		cbc.CryptBlocks(ct, block)
 		n, err = w.Write(ct)
@@ -142,9 +142,9 @@ func unpadBlock(p []byte) (m []byte, err error) {
 	var pLen int
 	origLen := len(p)
 
-	if p[origLen - 1] != 0x0 && p[origLen - 1] != 0x80 {
+	if p[origLen-1] != 0x0 && p[origLen-1] != 0x80 {
 		m = make([]byte, origLen)
-		copy(m, p)		
+		copy(m, p)
 		return
 	}
 	for pLen = origLen - 1; pLen >= 0; pLen-- {

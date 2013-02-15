@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+// Encrypted is a convenience structure that is used to store the IV
+// alongside the ciphertext.
 type Encrypted struct {
 	Ciphertext []byte
 	IV         []byte
@@ -57,7 +59,7 @@ func GenerateLTKey() (key []byte, err error) {
 
 	n, err := io.ReadFull(devRandom, key)
 	if err == nil && n != KeySize {
-		err = fmt.Errorf("[key] invalid random read size %d", n)	
+		err = fmt.Errorf("[key] invalid random read size %d", n)
 	}
 	return
 }
@@ -108,6 +110,25 @@ func Scrub(data []byte, rounds int) (err error) {
 	return
 }
 
+// Encrypt a slice of bytes, returning a slice of bytes containing the
+// IV, followed by the ciphertext.
+func EncryptBytes(key, data []byte) (enc []byte, err error) {
+        e, err := Encrypt(key, data)
+        if err != nil {
+                return
+        }
+
+        enc = e.ToBytes()
+        return
+}
+
+// Decrypt a slice of bytes containing the IV and ciphertext.
+func DecryptBytes(key, data []byte) (out []byte, err error) {
+        e := FromBytes(data)
+        out, err = e.Decrypt(key)
+        return
+}
+
 // Encrypt a byte slice.
 func Encrypt(key, data []byte) (e *Encrypted, err error) {
 	m, err := Pad(data)
@@ -151,7 +172,7 @@ func (e *Encrypted) Decrypt(key []byte) (m []byte, err error) {
 
 // ToByte converts the Encrypted struct to a byte slice, suitable, for
 // example, for sending data on the network.
-func (e *Encrypted) ToByte() (out []byte) {
+func (e *Encrypted) ToBytes() (out []byte) {
 	out = make([]byte, BlockSize)
 	copy(out, e.IV)
 	out = append(out, e.Ciphertext...)
@@ -160,7 +181,7 @@ func (e *Encrypted) ToByte() (out []byte) {
 
 // FromByte returns a pointer to an Encrypted struct from a byte
 // slice, i.e. for messages that have come off the wire.
-func FromByte(msg []byte) (e *Encrypted) {
+func FromBytes(msg []byte) (e *Encrypted) {
 	e = new(Encrypted)
 	e.IV = make([]byte, BlockSize)
 	copy(e.IV, msg)
