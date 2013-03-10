@@ -334,22 +334,22 @@ func TestByteCrypt(t *testing.T) {
 func TestByteCrypt2(t *testing.T) {
 	msg := []byte("Hello, world. Hallo, welt.")
 
-        fmt.Printf("CryptBytes: ")
-        enc, err := EncryptBytes(testKey, msg)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	fmt.Printf("CryptBytes: ")
+	enc, err := EncryptBytes(testKey, msg)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        dec, err := DecryptBytes(testKey, enc)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	dec, err := DecryptBytes(testKey, enc)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        if !bytes.Equal(msg, dec) {
-                err = fmt.Errorf("decryption failed")
-                FailWithError(t, err)
-        }
-        fmt.Println("ok")
+	if !bytes.Equal(msg, dec) {
+		err = fmt.Errorf("decryption failed")
+		FailWithError(t, err)
+	}
+	fmt.Println("ok")
 }
 
 // Benchmark the generation of session keys.
@@ -433,24 +433,23 @@ func BenchmarkScrubKey(b *testing.B) {
 	}
 }
 
-
 // Benchmark encrypting and decrypting to bytes.
 func BenchmarkByteCrypt(b *testing.B) {
 	msg := []byte("Hello, world. Hallo, welt.")
 
-        for i := 0; i < b.N; i++ {
-                enc, err := EncryptBytes(testKey, msg)
-                    if err != nil {
-                            b.FailNow()
-                    }
+	for i := 0; i < b.N; i++ {
+		enc, err := EncryptBytes(testKey, msg)
+		if err != nil {
+			b.FailNow()
+		}
 
-                dec, err := DecryptBytes(testKey, enc)
-                    if err != nil {
-                            b.FailNow()
-                    }
+		dec, err := DecryptBytes(testKey, enc)
+		if err != nil {
+			b.FailNow()
+		}
 
-                if !bytes.Equal(msg, dec) {
-                        b.FailNow()
-                }
-        }
+		if !bytes.Equal(msg, dec) {
+			b.FailNow()
+		}
+	}
 }

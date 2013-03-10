@@ -58,6 +58,7 @@ func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	return
 }
 
+// Decrypt an io.Reader to an io.Writer.
 func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	c, err := aes.NewCipher(key)
 	if err != nil {
@@ -103,7 +104,7 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	return
 }
 
-// Encrypt a file.
+// Encrypt the input file to the output file.
 func EncryptFile(in, out string, key []byte) (err error) {
 	inFile, err := os.Open(in)
 	if err != nil {
@@ -121,6 +122,7 @@ func EncryptFile(in, out string, key []byte) (err error) {
 	return
 }
 
+// Decrypt the input file to the output file.
 func DecryptFile(in, out string, key []byte) (err error) {
 	inFile, err := os.Open(in)
 	if err != nil {
@@ -128,7 +130,8 @@ func DecryptFile(in, out string, key []byte) (err error) {
 	}
 	defer inFile.Close()
 
-	outFile, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	outFile, err := os.OpenFile(out, os.O_WRONLY|os.O_CREATE|os.O_TRUNC,
+		0600)
 	if err != nil {
 		return
 	}

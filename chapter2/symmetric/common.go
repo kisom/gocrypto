@@ -20,7 +20,7 @@ type Encrypted struct {
 }
 
 var (
-	devRandom *os.File
+	devRandom   *os.File
 	SecureLevel = 0
 )
 
@@ -74,7 +74,6 @@ func GenerateIV() (iv []byte, err error) {
 	return
 }
 
-
 // Zeroise wipes out the data in a slice before deleting the array.
 func Zeroise(data []byte) (n int) {
 	dLen := len(data)
@@ -113,20 +112,20 @@ func Scrub(data []byte, rounds int) (err error) {
 // Encrypt a slice of bytes, returning a slice of bytes containing the
 // IV, followed by the ciphertext.
 func EncryptBytes(key, data []byte) (enc []byte, err error) {
-        e, err := Encrypt(key, data)
-        if err != nil {
-                return
-        }
+	e, err := Encrypt(key, data)
+	if err != nil {
+		return
+	}
 
-        enc = e.ToBytes()
-        return
+	enc = e.ToBytes()
+	return
 }
 
 // Decrypt a slice of bytes containing the IV and ciphertext.
 func DecryptBytes(key, data []byte) (out []byte, err error) {
-        e := FromBytes(data)
-        out, err = e.Decrypt(key)
-        return
+	e := FromBytes(data)
+	out, err = e.Decrypt(key)
+	return
 }
 
 // Encrypt a byte slice.
