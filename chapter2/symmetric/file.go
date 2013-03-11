@@ -3,7 +3,6 @@ package symmetric
 import (
 	"crypto/aes"
 	"crypto/cipher"
-	"fmt"
 	"io"
 	"os"
 )
@@ -20,40 +19,60 @@ func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 		return
 	}
 
-	cbc := cipher.NewCBCEncrypter(c, iv)
 	n, err := w.Write(iv)
 	if err != nil {
 		return
 	} else if n != BlockSize {
-		err = fmt.Errorf("failed to write the IV")
+		err = IVSizeMismatchError
 		return
 	}
 
+	cbc := cipher.NewCBCEncrypter(c, iv)
+
+	// We use a cryptoBlock to differentiate between partial reads and EOF conditions.
+	cryptBlock := make([]byte, 0)
+
 	for {
-		var n int
-		block := make([]byte, BlockSize)
-		n, err = r.Read(block)
+		if len(cryptBlock) == BlockSize {
+			cbc.CryptBlocks(cryptBlock, cryptBlock)
+			n, err = w.Write(cryptBlock)
+			if err != nil {
+				return
+			} else if n != BlockSize {
+				err = BlockSizeMismatchError
+				return
+			}
+			Zeroise(&cryptBlock)
+		}
+
+		readLen := BlockSize - len(cryptBlock)
+		buf := make([]byte, readLen)
+		n, err = r.Read(buf)
 		if err != nil && err != io.EOF {
 			return
-		} else if n == 0 {
+		} else if n > 0 {
+			cryptBlock = append(cryptBlock, buf[0:n]...)
+		}
+
+		if err != nil && err == io.EOF {
 			err = nil
 			break
 		}
+	}
 
-		block = block[0:n]
-		if n < BlockSize {
-			block, err = Pad(block)
-			if err != nil {
-				return
-			}
-		}
-
-		ct := make([]byte, len(block))
-		cbc.CryptBlocks(ct, block)
-		n, err = w.Write(ct)
-		if err != nil {
-			return
-		}
+	cryptBlock, err = Pad(cryptBlock)
+	if err != nil {
+		return
+	} else if (len(cryptBlock) % BlockSize) != 0 {
+		err = BlockSizeMismatchError
+		return
+	}
+	cbc.CryptBlocks(cryptBlock, cryptBlock)
+	n, err = w.Write(cryptBlock)
+	if err != nil {
+		return
+	} else if n != BlockSize {
+		err = BlockSizeMismatchError
 	}
 	return
 }
@@ -70,37 +89,58 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	if err != nil {
 		return
 	} else if n != BlockSize {
-		err = fmt.Errorf("failed to read IV")
+		err = IVSizeMismatchError
 		return
 	}
 
 	cbc := cipher.NewCBCDecrypter(c, iv)
+
+	// We use a cryptoBlock to differentiate between partial reads and EOF conditions.
+	cryptBlock := make([]byte, 0)
+
 	for {
-		block := make([]byte, BlockSize)
-		n, err = r.Read(block)
+		if len(cryptBlock) == BlockSize {
+			cbc.CryptBlocks(cryptBlock, cryptBlock)
+                        cryptBlock, err = unpadBlock(cryptBlock)
+                        if err != nil {
+                                return
+                        }
+			n, err = w.Write(cryptBlock)
+			if err != nil {
+				return
+			}
+                        Zeroise(&cryptBlock)
+		}
+
+		readLen := BlockSize - len(cryptBlock)
+		buf := make([]byte, readLen)
+		n, err = r.Read(buf)
 		if err != nil && err != io.EOF {
 			return
-		} else if n == 0 {
+		} else if n > 0 {
+			cryptBlock = append(cryptBlock, buf[0:n]...)
+		}
+
+		if err != nil && err == io.EOF {
+			err = nil
 			break
-		} else if n != BlockSize {
-			err = BadBlockError
-			return
-		}
-
-		pt := make([]byte, BlockSize)
-		cbc.CryptBlocks(pt, block)
-
-		pt, err = unpadBlock(pt)
-		if err != nil {
-			return
-		}
-		if _, err = w.Write(pt); err != nil {
-			return
 		}
 	}
-	if err == io.EOF {
-		err = nil
+
+        if len(cryptBlock) > 0 {
+	cryptBlock, err = Unpad(cryptBlock)
+	if err != nil {
+		return
 	}
+
+        cbc.CryptBlocks(cryptBlock, cryptBlock)
+	n, err = w.Write(cryptBlock)
+	if err != nil {
+		return
+	} else if n != BlockSize {
+		err = BlockSizeMismatchError
+	}
+        }
 	return
 }
 

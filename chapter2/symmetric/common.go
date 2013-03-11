@@ -75,14 +75,14 @@ func GenerateIV() (iv []byte, err error) {
 }
 
 // Zeroise wipes out the data in a slice before deleting the array.
-func Zeroise(data []byte) (n int) {
-	dLen := len(data)
+func Zeroise(data *[]byte) (n int) {
+	dLen := len(*data)
 
 	for n = 0; n < dLen; n++ {
-		data[n] = 0x0
+		(*data)[n] = 0x0
 	}
 
-	data = []byte{}
+	*data = make([]byte, 0)
 	return
 }
 
@@ -103,7 +103,7 @@ func Scrub(data []byte, rounds int) (err error) {
 			}
 		}
 	}
-	if dLen != Zeroise(data) {
+	if dLen != Zeroise(&data) {
 		err = fmt.Errorf("zeroise failed")
 	}
 	return

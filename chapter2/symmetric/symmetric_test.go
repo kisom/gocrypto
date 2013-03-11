@@ -150,6 +150,26 @@ func TestEncryptDecryptBlock(t *testing.T) {
 	fmt.Println("ok")
 }
 
+// Test Zeroise, which is used in the EncryptReader
+func TestZeroise(t *testing.T) {
+	fmt.Printf("Zeroise: ")
+
+	var err error
+	var testVector = []byte("hello, world")
+
+	if len(testVector) != len("hello, world") {
+		err = fmt.Errorf("testVector improperly initialised")
+		FailWithError(t, err)
+	}
+
+	Zeroise(&testVector)
+	if len(testVector) != 0 {
+		err = fmt.Errorf("testVector not empty after Zeroise")
+		FailWithError(t, err)
+	}
+	fmt.Println("ok")
+}
+
 // Test the encryption of a file.
 func TestEncryptReader(t *testing.T) {
 	fmt.Printf("EncryptReader: ")
@@ -300,6 +320,7 @@ func TestDecryptFile(t *testing.T) {
 	if expected != fi.Size() {
 		err = fmt.Errorf("output file is the wrong size (%d instead of %d)",
 			fi.Size(), expected)
+                panic(err.Error())
 	}
 
 	os.Remove(testEnc)
@@ -359,7 +380,7 @@ func BenchmarkGenerateKey(b *testing.B) {
 		if err != nil || len(key) != KeySize {
 			b.FailNow()
 		}
-		Zeroise(key)
+		Zeroise(&key)
 	}
 }
 
@@ -370,7 +391,7 @@ func BenchmarkGenerateLTKey(b *testing.B) {
 		if err != nil || len(key) != KeySize {
 			b.FailNow()
 		}
-		Zeroise(key)
+		Zeroise(&key)
 	}
 }
 
@@ -381,7 +402,7 @@ func BenchmarkGenerateIV(b *testing.B) {
 		if err != nil || len(iv) != BlockSize {
 			b.FailNow()
 		}
-		Zeroise(iv)
+		Zeroise(&iv)
 	}
 }
 
@@ -414,7 +435,7 @@ func BenchmarkEncryptBlock(b *testing.B) {
 			b.FailNow()
 		}
 
-		Zeroise(key)
+		Zeroise(&key)
 	}
 }
 
