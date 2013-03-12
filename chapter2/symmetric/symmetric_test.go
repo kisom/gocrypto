@@ -11,6 +11,7 @@ const (
 	testEnc = "/tmp/test.out"
 	testOut = "/tmp/test.dat"
 	testRef = "testdata/vector01.dat"
+	rPadRef = "testdata/vector02.dat"
 )
 
 var (
@@ -320,7 +321,47 @@ func TestDecryptFile(t *testing.T) {
 	if expected != fi.Size() {
 		err = fmt.Errorf("output file is the wrong size (%d instead of %d)",
 			fi.Size(), expected)
-                panic(err.Error())
+	}
+
+	os.Remove(testEnc)
+	os.Remove(testOut)
+	if err != nil {
+		FailWithError(t, err)
+	}
+
+	fmt.Println("ok")
+}
+
+// Make sure that blocks are properly padded with the Reader function.
+// rPadRef points to a file that contains a full pair of blocks, which
+// should require another full padding block.
+func TestReaderPadding(t *testing.T) {
+	fmt.Printf("ReaderPadding: ")
+	var err error
+
+	err = EncryptFile(rPadRef, testEnc, testKey)
+	if err != nil {
+		FailWithError(t, err)
+	}
+
+	fi, err := os.Stat(rPadRef)
+	if err != nil {
+		FailWithError(t, err)
+	}
+
+	// The output file should be two full data blocks, a block of padding,
+	// and a block containing the initialisation vector.
+	expected := fi.Size() + (2 * BlockSize)
+	fi, err = os.Stat(testEnc)
+	if err != nil {
+		err = fmt.Errorf("[testOut] %s", err.Error())
+		FailWithError(t, err)
+	}
+
+	if expected != fi.Size() {
+		err = fmt.Errorf("output file is the wrong size (%d instead of %d)",
+			fi.Size(), expected)
+		panic(err.Error())
 	}
 
 	os.Remove(testEnc)

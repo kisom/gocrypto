@@ -33,7 +33,7 @@ func init() {
 }
 
 func decryptTime(enc []byte) (ts string) {
-	msg, err := symmetric.FromByte(enc).Decrypt(Key)
+	msg, err := symmetric.FromBytes(enc).Decrypt(Key)
 	if err != nil {
 		panic(err.Error())
 	}

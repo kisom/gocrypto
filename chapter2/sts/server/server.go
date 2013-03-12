@@ -37,7 +37,7 @@ func timeMessage() (msg []byte) {
 		panic(err.Error())
 	}
 
-	msg = msgEncrypted.ToByte()
+	msg = msgEncrypted.ToBytes()
 	return
 }
 

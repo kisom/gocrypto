@@ -29,7 +29,8 @@ func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 
 	cbc := cipher.NewCBCEncrypter(c, iv)
 
-	// We use a cryptoBlock to differentiate between partial reads and EOF conditions.
+	// We use a cryptoBlock to differentiate between partial reads and
+	// EOF conditions.
 	cryptBlock := make([]byte, 0)
 
 	for {
@@ -101,15 +102,15 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	for {
 		if len(cryptBlock) == BlockSize {
 			cbc.CryptBlocks(cryptBlock, cryptBlock)
-                        cryptBlock, err = unpadBlock(cryptBlock)
-                        if err != nil {
-                                return
-                        }
+			cryptBlock, err = unpadBlock(cryptBlock)
+			if err != nil {
+				return
+			}
 			n, err = w.Write(cryptBlock)
 			if err != nil {
 				return
 			}
-                        Zeroise(&cryptBlock)
+			Zeroise(&cryptBlock)
 		}
 
 		readLen := BlockSize - len(cryptBlock)
@@ -127,20 +128,20 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 		}
 	}
 
-        if len(cryptBlock) > 0 {
-	cryptBlock, err = Unpad(cryptBlock)
-	if err != nil {
-		return
-	}
+	if len(cryptBlock) > 0 {
+		cryptBlock, err = Unpad(cryptBlock)
+		if err != nil {
+			return
+		}
 
-        cbc.CryptBlocks(cryptBlock, cryptBlock)
-	n, err = w.Write(cryptBlock)
-	if err != nil {
-		return
-	} else if n != BlockSize {
-		err = BlockSizeMismatchError
+		cbc.CryptBlocks(cryptBlock, cryptBlock)
+		n, err = w.Write(cryptBlock)
+		if err != nil {
+			return
+		} else if n != BlockSize {
+			err = BlockSizeMismatchError
+		}
 	}
-        }
 	return
 }
 
