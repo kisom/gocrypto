@@ -183,7 +183,6 @@ func DecryptFile(in, out string, key []byte) (err error) {
 }
 
 func unpadBlock(p []byte) (m []byte, err error) {
-	var pLen int
 	origLen := len(p)
 
 	if p[origLen-1] != 0x0 && p[origLen-1] != 0x80 {
@@ -191,23 +190,5 @@ func unpadBlock(p []byte) (m []byte, err error) {
 		copy(m, p)
 		return
 	}
-	for pLen = origLen - 1; pLen >= 0; pLen-- {
-		if p[pLen] == 0x80 {
-			break
-		}
-
-		if p[pLen] != 0x0 {
-			break
-		}
-
-		if (p[pLen] != 0x0 && p[pLen] != 0x80) ||
-			((origLen - pLen) > BlockSize) {
-			err = PaddingError
-			return
-		}
-	}
-
-	m = make([]byte, pLen)
-	copy(m, p)
-	return
+        return Unpad(p)
 }
