@@ -1,9 +1,9 @@
 package armour
 
 import (
-        "bytes"
-        "encoding/base64"
-        "flag"
+	"bytes"
+	"encoding/base64"
+	"flag"
 	"fmt"
 	"testing"
 )
@@ -15,22 +15,13 @@ var (
 )
 
 func init() {
-        fUseUrlEncoding := flag.Bool("url", false, "select URLEncoding scheme")
-        flag.Parse()
+	fUseUrlEncoding := flag.Bool("url", false, "select URLEncoding scheme")
+	flag.Parse()
 
-        if *fUseUrlEncoding {
-                fmt.Println("[+] URLEncoding selected")
-                Encoding = base64.URLEncoding
-        }
-}
-
-// FailWithError is a utility for dumping errors and failing the test.
-func FailWithError(t *testing.T, err error) {
-	fmt.Println("failed")
-	if err != nil {
-		fmt.Println("[!] ", err.Error())
+	if *fUseUrlEncoding {
+		fmt.Println("[+] URLEncoding selected")
+		Encoding = base64.URLEncoding
 	}
-	t.FailNow()
 }
 
 func TestBase64Encode(t *testing.T) {
@@ -76,37 +67,37 @@ func TestBase64EncodeDecode(t *testing.T) {
 }
 
 func TestBase64EncodeReader(t *testing.T) {
-        fmt.Printf("Base64EncodeReader: ")
+	fmt.Printf("Base64EncodeReader: ")
 
 	const testVector = "Hello, gophers."
 	const expected = "SGVsbG8sIGdvcGhlcnMu"
 
-        r := bytes.NewBuffer([]byte(testVector))
-        w := new(bytes.Buffer)
+	r := bytes.NewBuffer([]byte(testVector))
+	w := new(bytes.Buffer)
 
-        err := EncodeBase64Reader(w, r)
-        if err != nil {
-                FailWithError(t, err)
-        } else if string(w.Bytes()) != expected {
-                FailWithError(t, ErrEncoding)
-        }
-        fmt.Println("ok")
+	err := EncodeBase64Reader(w, r)
+	if err != nil {
+		FailWithError(t, err)
+	} else if string(w.Bytes()) != expected {
+		FailWithError(t, ErrEncoding)
+	}
+	fmt.Println("ok")
 }
 
 func TestBase64DecodeReader(t *testing.T) {
-        fmt.Printf("Base64DecodeReader: ")
+	fmt.Printf("Base64DecodeReader: ")
 
 	const expected = "Hello, gophers."
 	const testVector = "SGVsbG8sIGdvcGhlcnMu"
 
-        r := bytes.NewBuffer([]byte(testVector))
-        w := new(bytes.Buffer)
+	r := bytes.NewBuffer([]byte(testVector))
+	w := new(bytes.Buffer)
 
-        err := DecodeBase64Reader(w, r)
-        if err != nil {
-                FailWithError(t, err)
-        } else if string(w.Bytes()) != expected {
-                FailWithError(t, ErrEncoding)
-        }
-        fmt.Println("ok")
+	err := DecodeBase64Reader(w, r)
+	if err != nil {
+		FailWithError(t, err)
+	} else if string(w.Bytes()) != expected {
+		FailWithError(t, ErrEncoding)
+	}
+	fmt.Println("ok")
 }

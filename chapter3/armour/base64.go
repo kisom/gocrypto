@@ -39,7 +39,7 @@ func EncodeBase64Reader(out io.Writer, src io.Reader) (err error) {
 // to an io.Writer. If an error occurs during the copy, it will be
 // returned.
 func DecodeBase64Reader(out io.Writer, src io.Reader) (err error) {
-        decoder := base64.NewDecoder(Encoding, src)
-        _, err = io.Copy(out, decoder)
-        return
+	decoder := base64.NewDecoder(Encoding, src)
+	_, err = io.Copy(out, decoder)
+	return
 }
