@@ -228,12 +228,7 @@ func Unpad(p []byte) (m []byte, err error) {
 			break
 		}
 
-		if p[pLen] != 0x0 {
-			break
-		}
-
-		if (p[pLen] != 0x0 && p[pLen] != 0x80) ||
-			((origLen - pLen) > BlockSize) {
+		if p[pLen] != 0x0 || ((origLen - pLen) > BlockSize) {
 			err = PaddingError
 			return
 		}
