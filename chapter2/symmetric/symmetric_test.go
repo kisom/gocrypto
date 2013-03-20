@@ -66,7 +66,7 @@ func TestGenerateIV(t *testing.T) {
 func TestPadBlock(t *testing.T) {
 	m := []byte("Hello, world.")
 	fmt.Printf("Pad: ")
-	p, err := Pad(m)
+	p, err := PadBuffer(m)
 	if len(p) != BlockSize {
 		FailWithError(t, err)
 	}
@@ -77,7 +77,7 @@ func TestPadBlock(t *testing.T) {
 func TestPadBlock2(t *testing.T) {
 	m := []byte("ABCDABCDABCDABCD")
 	fmt.Printf("Pad/Unpad: ")
-	p, err := Pad(m)
+	p, err := PadBuffer(m)
 	if len(p) != (2 * BlockSize) {
 		FailWithError(t, err)
 	}
@@ -102,7 +102,7 @@ func TestUnpadBlock(t *testing.T) {
 		[]byte("Здравствуй, мир."),
 	}
 	for i := 0; i < len(m); i++ {
-		p, err := Pad(m[i])
+		p, err := PadBuffer(m[i])
 		if err != nil {
 			FailWithError(t, err)
 		} else if len(p)%BlockSize != 0 {
@@ -110,7 +110,7 @@ func TestUnpadBlock(t *testing.T) {
 			FailWithError(t, err)
 		}
 
-		unpad, err := Unpad(p)
+		unpad, err := UnpadBuffer(p)
 		if err != nil {
 			FailWithError(t, err)
 		} else if len(unpad) != len(m[i]) {
@@ -139,7 +139,7 @@ func TestEncryptDecryptBlock(t *testing.T) {
 		FailWithError(t, err)
 	}
 
-	decrypted, err := e.Decrypt(key)
+	decrypted, err := Decrypt(key, e)
 	if err != nil {
 		FailWithError(t, err)
 	}
@@ -373,47 +373,6 @@ func TestReaderPadding(t *testing.T) {
 	fmt.Println("ok")
 }
 
-// Test to/from byte functions.
-func TestByteCrypt(t *testing.T) {
-	msg := []byte("Hello, world. Hallo, welt.")
-
-	fmt.Printf("ByteCrypt: ")
-	e, err := Encrypt(testKey, msg)
-	if err != nil {
-		FailWithError(t, err)
-	}
-	enc := e.ToBytes()
-
-	dec, err := FromBytes(enc).Decrypt(testKey)
-	if err != nil {
-		FailWithError(t, err)
-	} else if !bytes.Equal(dec, msg) {
-		FailWithError(t, nil)
-	}
-	fmt.Println("ok")
-}
-
-func TestByteCrypt2(t *testing.T) {
-	msg := []byte("Hello, world. Hallo, welt.")
-
-	fmt.Printf("CryptBytes: ")
-	enc, err := EncryptBytes(testKey, msg)
-	if err != nil {
-		FailWithError(t, err)
-	}
-
-	dec, err := DecryptBytes(testKey, enc)
-	if err != nil {
-		FailWithError(t, err)
-	}
-
-	if !bytes.Equal(msg, dec) {
-		err = fmt.Errorf("decryption failed")
-		FailWithError(t, err)
-	}
-	fmt.Println("ok")
-}
-
 // Benchmark the generation of session keys.
 func BenchmarkGenerateKey(b *testing.B) {
 	for i := 0; i < b.N; i++ {
@@ -465,7 +424,7 @@ func BenchmarkEncryptBlock(b *testing.B) {
 			b.FailNow()
 		}
 
-		decrypted, err := e.Decrypt(key)
+		decrypted, err := Decrypt(key, e)
 		if err != nil {
 			fmt.Println("decrypt")
 			b.FailNow()
@@ -500,12 +459,12 @@ func BenchmarkByteCrypt(b *testing.B) {
 	msg := []byte("Hello, world. Hallo, welt.")
 
 	for i := 0; i < b.N; i++ {
-		enc, err := EncryptBytes(testKey, msg)
+		enc, err := Encrypt(testKey, msg)
 		if err != nil {
 			b.FailNow()
 		}
 
-		dec, err := DecryptBytes(testKey, enc)
+		dec, err := Decrypt(testKey, enc)
 		if err != nil {
 			b.FailNow()
 		}

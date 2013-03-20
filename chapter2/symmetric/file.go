@@ -61,7 +61,7 @@ func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 		}
 	}
 
-	cryptBlock, err = Pad(cryptBlock)
+	cryptBlock, err = PadBuffer(cryptBlock)
 	if err != nil {
 		return
 	} else if (len(cryptBlock) % BlockSize) != 0 {
@@ -130,7 +130,7 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	}
 
 	if len(cryptBlock) > 0 {
-		cryptBlock, err = Unpad(cryptBlock)
+		cryptBlock, err = UnpadBuffer(cryptBlock)
 		if err != nil {
 			return
 		}
@@ -191,5 +191,5 @@ func unpadBlock(p []byte) (m []byte, err error) {
 		copy(m, p)
 		return
 	}
-        return Unpad(p)
+        return UnpadBuffer(p)
 }
