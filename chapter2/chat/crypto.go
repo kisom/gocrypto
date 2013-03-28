@@ -61,7 +61,7 @@ func PadBuffer(m []byte) (p []byte, err error) {
 
 // Unpad data padded with the standard padding scheme.
 func UnpadBuffer(p []byte) (m []byte, err error) {
-        m = p
+	m = p
 	var pLen int
 	origLen := len(m)
 
@@ -75,7 +75,7 @@ func UnpadBuffer(p []byte) (m []byte, err error) {
 			return
 		}
 	}
-        m = m[:pLen]
+	m = m[:pLen]
 	return
 }
 

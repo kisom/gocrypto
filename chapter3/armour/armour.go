@@ -64,47 +64,47 @@ func stripKey(key []byte, armour bool) (out []byte, err error) {
 // Encrypt encrypts the plaintext with the key. If the armour flag
 // is set to true, the plaintext will be base64'd.
 func Encrypt(key, pt []byte, armour bool) (ct []byte, err error) {
-        rawkey, err := stripKey(key, armour)
-        if err != nil {
-                return
-        }
+	rawkey, err := stripKey(key, armour)
+	if err != nil {
+		return
+	}
 
-        var mode byte
-        if armour {
-                mode = ModeArmour
-                ct, err = AbsEncrypt(rawkey, pt)
-        } else {
-                mode = ModeBinary
-                ct, err = symmetric.Encrypt(rawkey, pt)
-        }
+	var mode byte
+	if armour {
+		mode = ModeArmour
+		ct, err = AbsEncrypt(rawkey, pt)
+	} else {
+		mode = ModeBinary
+		ct, err = symmetric.Encrypt(rawkey, pt)
+	}
 
-        ct = InsertByte(ct, mode)
-        return
+	ct = InsertByte(ct, mode)
+	return
 }
 
-// Decrypt decrypts the 
+// Decrypt decrypts the
 func Decrypt(key, ct []byte) (pt []byte, err error) {
-        var mode = ct[0]
-        var armour bool = (mode == ModeArmour)
+	var mode = ct[0]
+	var armour bool = (mode == ModeArmour)
 
-        ct = ct[1:]
-        key, err = stripKey(key, armour)
-        if err != nil {
-                return
-        }
+	ct = ct[1:]
+	key, err = stripKey(key, armour)
+	if err != nil {
+		return
+	}
 
-        if armour {
-                pt, err = AbsDecrypt(key, ct)
-        } else {
-                pt, err = symmetric.Decrypt(key, ct)
-        }
-        return
+	if armour {
+		pt, err = AbsDecrypt(key, ct)
+	} else {
+		pt, err = symmetric.Decrypt(key, ct)
+	}
+	return
 }
 
 func InsertByte(bs []byte, b byte) []byte {
-        out := make([]byte, 0)
-        out = append(out, b)
-        out = append(out, bs...)
+	out := make([]byte, 0)
+	out = append(out, b)
+	out = append(out, bs...)
 
-        return out
+	return out
 }

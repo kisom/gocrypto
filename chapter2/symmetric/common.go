@@ -146,9 +146,9 @@ func Decrypt(key []byte, ct []byte) (msg []byte, err error) {
 		return
 	}
 
-        // Copy the ciphertext to prevent it from being modified.
-        tmp_ct := make([]byte, len(ct))
-        copy(tmp_ct, ct)
+	// Copy the ciphertext to prevent it from being modified.
+	tmp_ct := make([]byte, len(ct))
+	copy(tmp_ct, ct)
 	iv := tmp_ct[:aes.BlockSize]
 	if len(iv) != aes.BlockSize {
 		return msg, ErrInvalidIV

@@ -42,117 +42,117 @@ func TestGenerateKey(t *testing.T) {
 }
 
 func TestEncryptDecryptArmour(t *testing.T) {
-        fmt.Printf("ArmourEncryption: ")
+	fmt.Printf("ArmourEncryption: ")
 
-        testVector := []byte("Hello, gophers. This is a test message.")
-        key, err := GenerateKey(true)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	testVector := []byte("Hello, gophers. This is a test message.")
+	key, err := GenerateKey(true)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        enc, err := Encrypt(key, testVector, true)
-        if err != nil {
-                FailWithError(t, err)
-        }
-        origenc := make([]byte, len(enc))
-        copy(origenc, enc)
+	enc, err := Encrypt(key, testVector, true)
+	if err != nil {
+		FailWithError(t, err)
+	}
+	origenc := make([]byte, len(enc))
+	copy(origenc, enc)
 
-        dec, err := Decrypt(key, enc)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	dec, err := Decrypt(key, enc)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        if !bytes.Equal(testVector, dec) {
-                FailWithError(t, ErrNoMatch)
-        } else if !bytes.Equal(enc, origenc) {
-                FailWithError(t, fmt.Errorf("ct was modified"))
-        }
-        fmt.Println("ok")
+	if !bytes.Equal(testVector, dec) {
+		FailWithError(t, ErrNoMatch)
+	} else if !bytes.Equal(enc, origenc) {
+		FailWithError(t, fmt.Errorf("ct was modified"))
+	}
+	fmt.Println("ok")
 }
 
 func TestEncryptDecryptBinary(t *testing.T) {
-        fmt.Printf("BinaryEncryption: ")
+	fmt.Printf("BinaryEncryption: ")
 
-        testVector := []byte("Hello, gophers. This is a test message.")
-        key, err := GenerateKey(false)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	testVector := []byte("Hello, gophers. This is a test message.")
+	key, err := GenerateKey(false)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        enc, err := Encrypt(key, testVector, false)
-        if err != nil {
-                FailWithError(t, err)
-        }
-        origenc := make([]byte, len(enc))
-        copy(origenc, enc)
+	enc, err := Encrypt(key, testVector, false)
+	if err != nil {
+		FailWithError(t, err)
+	}
+	origenc := make([]byte, len(enc))
+	copy(origenc, enc)
 
-        dec, err := Decrypt(key, enc)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	dec, err := Decrypt(key, enc)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        if !bytes.Equal(testVector, dec) {
-                FailWithError(t, ErrNoMatch)
-        } else if !bytes.Equal(enc, origenc) {
-                FailWithError(t, fmt.Errorf("ct was modified"))
-        }
-        fmt.Println("ok")
+	if !bytes.Equal(testVector, dec) {
+		FailWithError(t, ErrNoMatch)
+	} else if !bytes.Equal(enc, origenc) {
+		FailWithError(t, fmt.Errorf("ct was modified"))
+	}
+	fmt.Println("ok")
 }
 
 func TestEncryptDecryptArmourWithBinaryKey(t *testing.T) {
-        fmt.Printf("ArmourEncryption (binary key): ")
+	fmt.Printf("ArmourEncryption (binary key): ")
 
-        testVector := []byte("Hello, gophers. This is a test message.")
-        key, err := GenerateKey(false)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	testVector := []byte("Hello, gophers. This is a test message.")
+	key, err := GenerateKey(false)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        enc, err := Encrypt(key, testVector, true)
-        if err != nil {
-                FailWithError(t, err)
-        }
-        origenc := make([]byte, len(enc))
-        copy(origenc, enc)
+	enc, err := Encrypt(key, testVector, true)
+	if err != nil {
+		FailWithError(t, err)
+	}
+	origenc := make([]byte, len(enc))
+	copy(origenc, enc)
 
-        dec, err := Decrypt(key, enc)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	dec, err := Decrypt(key, enc)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        if !bytes.Equal(testVector, dec) {
-                FailWithError(t, ErrNoMatch)
-        } else if !bytes.Equal(enc, origenc) {
-                FailWithError(t, fmt.Errorf("ct was modified"))
-        }
-        fmt.Println("ok")
+	if !bytes.Equal(testVector, dec) {
+		FailWithError(t, ErrNoMatch)
+	} else if !bytes.Equal(enc, origenc) {
+		FailWithError(t, fmt.Errorf("ct was modified"))
+	}
+	fmt.Println("ok")
 }
 
 func TestEncryptDecryptBinaryWithArmouredKey(t *testing.T) {
-        fmt.Printf("BinaryEncryption (armoured key): ")
+	fmt.Printf("BinaryEncryption (armoured key): ")
 
-        testVector := []byte("Hello, gophers. This is a test message.")
-        key, err := GenerateKey(true)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	testVector := []byte("Hello, gophers. This is a test message.")
+	key, err := GenerateKey(true)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        enc, err := Encrypt(key, testVector, false)
-        if err != nil {
-                FailWithError(t, err)
-        }
-        origenc := make([]byte, len(enc))
-        copy(origenc, enc)
+	enc, err := Encrypt(key, testVector, false)
+	if err != nil {
+		FailWithError(t, err)
+	}
+	origenc := make([]byte, len(enc))
+	copy(origenc, enc)
 
-        dec, err := Decrypt(key, enc)
-        if err != nil {
-                FailWithError(t, err)
-        }
+	dec, err := Decrypt(key, enc)
+	if err != nil {
+		FailWithError(t, err)
+	}
 
-        if !bytes.Equal(testVector, dec) {
-                FailWithError(t, ErrNoMatch)
-        } else if !bytes.Equal(enc, origenc) {
-                FailWithError(t, fmt.Errorf("ct was modified"))
-        }
-        fmt.Println("ok")
+	if !bytes.Equal(testVector, dec) {
+		FailWithError(t, ErrNoMatch)
+	} else if !bytes.Equal(enc, origenc) {
+		FailWithError(t, fmt.Errorf("ct was modified"))
+	}
+	fmt.Println("ok")
 }
