@@ -146,11 +146,14 @@ func Decrypt(key []byte, ct []byte) (msg []byte, err error) {
 		return
 	}
 
-	iv := ct[:aes.BlockSize]
+        // Copy the ciphertext to prevent it from being modified.
+        tmp_ct := make([]byte, len(ct))
+        copy(tmp_ct, ct)
+	iv := tmp_ct[:aes.BlockSize]
 	if len(iv) != aes.BlockSize {
 		return msg, ErrInvalidIV
 	}
-	msg = ct[aes.BlockSize:]
+	msg = tmp_ct[aes.BlockSize:]
 
 	cbc := cipher.NewCBCDecrypter(c, iv)
 	cbc.CryptBlocks(msg, msg)

@@ -25,10 +25,7 @@ func GenerateKey(armour bool) (key []byte, err error) {
 	}
 
 	if err == nil {
-		tmpkey := make([]byte, 0)
-		tmpkey = append(tmpkey, mode)
-		tmpkey = append(tmpkey, key...)
-		key = tmpkey
+		key = InsertByte(key, mode)
 	}
 	return
 }
@@ -73,17 +70,15 @@ func Encrypt(key, pt []byte, armour bool) (ct []byte, err error) {
         }
 
         var mode byte
-        var out []byte
         if armour {
                 mode = ModeArmour
-                out, err = AbsEncrypt(rawkey, pt)
+                ct, err = AbsEncrypt(rawkey, pt)
         } else {
                 mode = ModeBinary
-                out, err = symmetric.Encrypt(rawkey, pt)
+                ct, err = symmetric.Encrypt(rawkey, pt)
         }
-        ct = make([]byte, 0)
-        ct = append(ct, mode)
-        ct = append(ct, out...)
+
+        ct = InsertByte(ct, mode)
         return
 }
 
@@ -104,4 +99,12 @@ func Decrypt(key, ct []byte) (pt []byte, err error) {
                 pt, err = symmetric.Decrypt(key, ct)
         }
         return
+}
+
+func InsertByte(bs []byte, b byte) []byte {
+        out := make([]byte, 0)
+        out = append(out, b)
+        out = append(out, bs...)
+
+        return out
 }
