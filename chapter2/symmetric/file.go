@@ -97,7 +97,7 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	cbc := cipher.NewCBCDecrypter(c, iv)
 
 	// We use a cryptoBlock to differentiate between partial reads
-        // and EOF conditions.
+	// and EOF conditions.
 	cryptBlock := make([]byte, 0)
 
 	for {
@@ -184,11 +184,11 @@ func DecryptFile(in, out string, key []byte) (err error) {
 }
 
 func unpadBlock(p []byte) (m []byte, err error) {
-        m = p
+	m = p
 	origLen := len(m)
 
 	if m[origLen-1] != 0x0 && m[origLen-1] != 0x80 {
 		return
 	}
-        return UnpadBuffer(m)
+	return UnpadBuffer(m)
 }
