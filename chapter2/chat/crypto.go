@@ -61,22 +61,21 @@ func PadBuffer(m []byte) (p []byte, err error) {
 
 // Unpad data padded with the standard padding scheme.
 func UnpadBuffer(p []byte) (m []byte, err error) {
+        m = p
 	var pLen int
-	origLen := len(p)
+	origLen := len(m)
 
 	for pLen = origLen - 1; pLen >= 0; pLen-- {
-		if p[pLen] == 0x80 {
+		if m[pLen] == 0x80 {
 			break
 		}
 
-		if p[pLen] != 0x0 || (origLen-pLen) > aes.BlockSize {
+		if m[pLen] != 0x0 || (origLen-pLen) > aes.BlockSize {
 			err = ErrPadding
 			return
 		}
 	}
-
-	m = make([]byte, pLen)
-	copy(m, p)
+        m = m[:pLen]
 	return
 }
 

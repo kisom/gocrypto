@@ -184,12 +184,11 @@ func DecryptFile(in, out string, key []byte) (err error) {
 }
 
 func unpadBlock(p []byte) (m []byte, err error) {
-	origLen := len(p)
+        m = p
+	origLen := len(m)
 
-	if p[origLen-1] != 0x0 && p[origLen-1] != 0x80 {
-		m = make([]byte, origLen)
-		copy(m, p)
+	if m[origLen-1] != 0x0 && m[origLen-1] != 0x80 {
 		return
 	}
-        return UnpadBuffer(p)
+        return UnpadBuffer(m)
 }
