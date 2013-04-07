@@ -4,5 +4,5 @@
    The package provides a type called a 'MetaKey'; once created, this
    cannot be modified in code. However, if written to file and read back
    in, it can be modified.
- */
+*/
 package metakey

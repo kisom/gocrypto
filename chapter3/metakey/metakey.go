@@ -133,24 +133,18 @@ func (mk *MetaKey) IsExpired() bool {
 // GetKey returns the appropriate encryption key for the requested algorithm.
 func (mk *MetaKey) GetKey(keySize int) (key []byte, err error) {
 	var keyType int
-	var supported bool
 
 	switch keySize {
 	case AES128KeyLength:
-		supported = true
 		keyType = tagKeyAES128
 	case AES192KeyLength:
-		supported = true
 		keyType = tagKeyAES192
 	case AES256KeyLength:
-		supported = true
 		keyType = tagKeyAES256
 	default:
-		supported = false
-	}
-	if !supported {
 		return key, ErrKeySizeNotSupported
 	}
+
 	tlv, err := mk.fields.Get(keyType)
 	if err != nil {
 		return
