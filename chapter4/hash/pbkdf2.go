@@ -7,14 +7,27 @@ import (
 )
 
 var (
-        IterationCount = 16384
-        KeySize = 32
-        SaltLength = 128
+	IterationCount = 16384
+	KeySize        = 32
+	SaltLength     = 128
 )
 
 type PasswordHash struct {
-        Salt []byte
-        Hash []byte
+	Salt []byte
+	Hash []byte
+}
+
+func generateSalt(chars int) (salt []byte) {
+	saltBytes := make([]byte, chars)
+	nRead, err := rand.Read(saltBytes)
+	if err != nil {
+		salt = []byte{}
+	} else if nRead < chars {
+		salt = []byte{}
+	} else {
+		salt = saltBytes
+	}
+	return
 }
 
 // HashPassword generates a salt and returns a hashed version of the password.
@@ -26,7 +39,7 @@ func HashPassword(password string) *PasswordHash {
 // HashPasswordWithSalt hashes the password with the specified salt.
 func HashPasswordWithSalt(password string, salt []byte) (ph *PasswordHash) {
 	hash := _pbkdf2.Key([]byte(password), salt, IterationCount,
-                  KeySize, DefaultAlgo)
+		KeySize, DefaultAlgo.New)
 	return &PasswordHash{hash, salt}
 }
 
@@ -51,4 +64,3 @@ func MatchPassword(password string, ph *PasswordHash) bool {
 	}
 	return passed
 }
-
