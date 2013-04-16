@@ -230,43 +230,49 @@ func (mk *MetaKey) Export(password, filename string) (err error) {
 	if err != nil {
 		return
 	}
-        ph := hash.HashPassword(password)
-        out := hash.New(buf.Bytes()).Digest()
-        out = append(out, buf.Bytes()...)
-        enc, err := armour.Encrypt(ph.Hash, out, true)
-        if err != nil {
-                return
-        }
-
-        out = ph.Salt
-        out = append(out, enc...)
-	err = ioutil.WriteFile(filename, enc, 0644)
-	return
-}
-
-func Import(password, filename string) (mk *MetaKey, err error) {
-	in, err := ioutil.ReadFile(filename)
+	pk := hash.DeriveKey(password)
+	out := hash.New(buf.Bytes()).Digest()
+	out = append(out, buf.Bytes()...)
+	enc, err := armour.Encrypt(binaryKeyFromDerivedKey(pk), out, false)
 	if err != nil {
 		return
 	}
 
-        salt := in[:hash.KeySize]
-        in = in[hash.KeySize:]
-        key := hash.HashPasswordWithSalt(password, salt).Hash
-        dec, err := armour.Decrypt(key, in)
-        if err != nil {
-                return
-        }
+	out = pk.Salt
+	out = append(out, enc...)
+	err = ioutil.WriteFile(filename, armour.EncodeBase64(out), 0644)
+	return
+}
 
-        h := dec[:hash.HashLen]
-        dec = dec[hash.HashLen:]
-        if !bytes.Equal(h, hash.New(dec).Digest()) {
-                err = fmt.Errorf("invalid digest")
-                return
-        }
+func Import(password, filename string) (mk *MetaKey, err error) {
+	b64in, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return
+	}
 
-        buf := bytes.NewBuffer(dec)
-        return Read(buf)
+	in, err := armour.DecodeBase64(b64in)
+	if err != nil {
+		return
+	}
+
+	salt := in[:hash.SaltLength]
+	in = in[hash.SaltLength:]
+	key := binaryKeyFromDerivedKey(
+		hash.DeriveKeyWithSalt(password, salt))
+	dec, err := armour.Decrypt(key, in)
+	if err != nil {
+		return
+	}
+
+	h := dec[:hash.HashLen]
+	dec = dec[hash.HashLen:]
+	if !bytes.Equal(h, hash.New(dec).Digest()) {
+		err = fmt.Errorf("invalid digest")
+		return
+	}
+
+	buf := bytes.NewBuffer(dec)
+	return Read(buf)
 }
 
 func (mk *MetaKey) Valid() bool {
@@ -302,4 +308,10 @@ func newBinaryKey(size int) (key []byte, err error) {
 		return key, ErrInvalidKey
 	}
 	return
+}
+
+func binaryKeyFromDerivedKey(ph *hash.PasswordKey) []byte {
+	key := make([]byte, 1)
+	key[0] = 0
+	return append(key, ph.Key...)
 }
