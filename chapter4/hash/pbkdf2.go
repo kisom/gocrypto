@@ -1,7 +1,7 @@
 package hash
 
 import (
-	_pbkdf2 "code.google.com/p/go.crypto/pbkdf2"
+	pbkdf2 "code.google.com/p/go.crypto/pbkdf2"
 	"crypto/rand"
 	"crypto/subtle"
 )
@@ -12,9 +12,9 @@ var (
 	SaltLength     = 128
 )
 
-type PasswordHash struct {
+type PasswordKey struct {
 	Salt []byte
-	Hash []byte
+	Key  []byte
 }
 
 func generateSalt(chars int) (salt []byte) {
@@ -30,36 +30,36 @@ func generateSalt(chars int) (salt []byte) {
 	return
 }
 
-// HashPassword generates a salt and returns a hashed version of the password.
-func HashPassword(password string) *PasswordHash {
+// DeriveKey generates a salt and returns a hashed version of the password.
+func DeriveKey(password string) *PasswordKey {
 	salt := generateSalt(SaltLength)
-	return HashPasswordWithSalt(password, salt)
+	return DeriveKeyWithSalt(password, salt)
 }
 
-// HashPasswordWithSalt hashes the password with the specified salt.
-func HashPasswordWithSalt(password string, salt []byte) (ph *PasswordHash) {
-	hash := _pbkdf2.Key([]byte(password), salt, IterationCount,
+// DeriveKeyWithSalt hashes the password with the specified salt.
+func DeriveKeyWithSalt(password string, salt []byte) (ph *PasswordKey) {
+	key := pbkdf2.Key([]byte(password), salt, IterationCount,
 		KeySize, DefaultAlgo.New)
-	return &PasswordHash{hash, salt}
+	return &PasswordKey{salt, key}
 }
 
 // MatchPassword compares the input password with the password hash.
 // It returns true if they match.
-func MatchPassword(password string, ph *PasswordHash) bool {
+func MatchPassword(password string, pk *PasswordKey) bool {
 	matched := 0
-	new_hash := HashPasswordWithSalt(password, ph.Salt)
+	new_key := DeriveKeyWithSalt(password, pk.Salt)
 
-	size := len(new_hash.Hash)
-	if size > len(ph.Hash) {
-		size = len(ph.Hash)
+	size := len(new_key.Key)
+	if size > len(pk.Key) {
+		size = len(pk.Key)
 	}
 
 	for i := 0; i < size; i++ {
-		matched += subtle.ConstantTimeByteEq(new_hash.Hash[i], ph.Hash[i])
+		matched += subtle.ConstantTimeByteEq(new_key.Key[i], pk.Key[i])
 	}
 
 	passed := matched == size
-	if len(new_hash.Hash) != len(ph.Hash) {
+	if len(new_key.Key) != len(pk.Key) {
 		return false
 	}
 	return passed
