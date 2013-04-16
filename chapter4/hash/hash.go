@@ -9,6 +9,7 @@ import (
 )
 
 const DefaultAlgo = crypto.SHA512
+var HashLen = sha512.Size
 
 type Digest struct {
 	digest []byte
