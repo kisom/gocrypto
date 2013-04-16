@@ -1,13 +1,40 @@
 package main
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"flag"
 	"fmt"
+	"github.com/kisom/gocrypto/chapter4/hash"
 	"log"
+	"math"
+	"math/big"
 	"net"
 	"os"
 )
+
+var Password string
+
+func randomNumber() uint64 {
+	max := big.NewInt((math.MaxInt64))
+	n, err := rand.Int(rand.Reader, max)
+	if err != nil {
+		panic("couldn't generate random value: " + err.Error())
+	}
+	res := uint64(n.Int64())
+	return res
+}
+
+func validateChallenge(chal string, resp string) bool {
+	data := []byte(Password)
+	data = append(data, []byte(chal)...)
+	data = hash.New(data).Digest()
+
+	if string(data) != resp {
+		return false
+	}
+	return true
+}
 
 func sendChallenge(conn net.Conn) {
 	defer conn.Close()
