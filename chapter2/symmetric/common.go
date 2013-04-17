@@ -13,7 +13,6 @@ import (
 var (
 	ErrBadKey        = fmt.Errorf("invalid key")
 	ErrPadding       = fmt.Errorf("invalid padding")
-	ErrRandomFailure = fmt.Errorf("failed to read enough random data")
 )
 
 var (
@@ -36,12 +35,7 @@ func init() {
 // Random returns a byte slice containing size random bytes.
 func Random(size int) (b []byte, err error) {
 	b = make([]byte, size)
-	n, err := rand.Read(b)
-	if err != nil {
-		return
-	} else if size != n {
-		err = ErrRandomFailure
-	}
+	_, err = io.ReadFull(rand.Reader, b)
 	return
 }
 
@@ -59,10 +53,7 @@ func GenerateLTKey() (key []byte, err error) {
 	}
 	key = make([]byte, KeySize)
 
-	n, err := io.ReadFull(devRandom, key)
-	if err == nil && n != KeySize {
-		err = fmt.Errorf("[key] invalid random read size %d", n)
-	}
+	_, err = io.ReadFull(devRandom, key)
 	return
 }
 
