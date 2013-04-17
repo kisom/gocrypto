@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	ErrBadKey        = fmt.Errorf("invalid key")
-	ErrPadding       = fmt.Errorf("invalid padding")
+	ErrBadKey  = fmt.Errorf("invalid key")
+	ErrPadding = fmt.Errorf("invalid padding")
 )
 
 var (
