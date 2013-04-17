@@ -18,15 +18,8 @@ type PasswordKey struct {
 }
 
 func generateSalt(chars int) (salt []byte) {
-	saltBytes := make([]byte, chars)
-	nRead, err := rand.Read(saltBytes)
-	if err != nil {
-		salt = []byte{}
-	} else if nRead < chars {
-		salt = []byte{}
-	} else {
-		salt = saltBytes
-	}
+	salt = make([]byte, chars)
+	nRead, err := io.ReadFull(rand.Reader, salt)
 	return
 }
 
