@@ -24,14 +24,6 @@ func readPrompt(prompt string) (input string, err error) {
 	return
 }
 
-func openForWrite(filename string) (w io.WriteCloser, err error) {
-	w, err = os.OpenFile(filename, os.O_WRONLY, 0600)
-	if err != nil && os.IsNotExist(err) {
-		w, err = os.Create(filename)
-	}
-	return
-}
-
 func main() {
 	shouldDecrypt := flag.Bool("d", false, "decrypt the input file")
 	shouldEncrypt := flag.Bool("e", false, "encrypt the input file")
@@ -83,17 +75,14 @@ func decryptFile(inFile, outFile, passphrase string) (err error) {
 	}
 	defer inReader.Close()
 
-	outWriter, err := openForWrite(outFile)
+	outWriter, err := os.Create(outFile)
 	if err != nil {
 		return
 	}
 	defer outWriter.Close()
 
-	n, err := inReader.Read(salt)
+	_, err := io.ReadFull(inReader, salt)
 	if err != nil {
-		return
-	} else if n != len(salt) {
-		err = ErrWrite
 		return
 	}
 
@@ -111,7 +100,7 @@ func encryptFile(inFile, outFile, passphrase string) (err error) {
 	}
 	defer inReader.Close()
 
-	outWriter, err := openForWrite(outFile)
+	outWriter, err := os.Create(outFile)
 	if err != nil {
 		return
 	}
