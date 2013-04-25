@@ -1,7 +1,8 @@
 package hash
 
 import (
-	pbkdf2 "code.google.com/p/go.crypto/pbkdf2"
+	"code.google.com/p/go.crypto/pbkdf2"
+        "io"
 	"crypto/rand"
 	"crypto/subtle"
 )
@@ -17,15 +18,18 @@ type PasswordKey struct {
 	Key  []byte
 }
 
-func generateSalt(chars int) (salt []byte) {
+func generateSalt(chars int) (salt []byte, err error) {
 	salt = make([]byte, chars)
-	nRead, err := io.ReadFull(rand.Reader, salt)
+	_, err = io.ReadFull(rand.Reader, salt)
 	return
 }
 
 // DeriveKey generates a salt and returns a hashed version of the password.
 func DeriveKey(password string) *PasswordKey {
-	salt := generateSalt(SaltLength)
+	salt, err := generateSalt(SaltLength)
+        if err != nil {
+                return nil
+        }
 	return DeriveKeyWithSalt(password, salt)
 }
 
