@@ -38,7 +38,6 @@ func TestGenerateKey(t *testing.T) {
 }
 
 // Test long term key generation.
-/*
 func TestGenerateLTKey(t *testing.T) {
 	fmt.Printf("GenerateLTKey: ")
 	if SecureLevel < 1 {
@@ -52,7 +51,6 @@ func TestGenerateLTKey(t *testing.T) {
 	}
 	fmt.Println("ok")
 }
-*/
 
 // Test initialisation vector generation.
 func TestGenerateIV(t *testing.T) {
