@@ -9,7 +9,10 @@ import (
 
 type Digest []byte
 
-var HashAlgo = sha512.New
+var (
+        HashAlgo = sha512.New
+        HashLen = sha512.Size
+)
 
 const ReadSize = 4096
 
