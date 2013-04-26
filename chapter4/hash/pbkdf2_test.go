@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
-	"time"
 )
 
 const testPass = "hello, world"
@@ -20,7 +19,6 @@ var refHash = []byte{43, 183, 196, 128, 139, 53, 134, 211, 2, 9, 97,
 var refPH = &PasswordKey{refHash, refSalt}
 
 func TestHashPasswordWithSalt(t *testing.T) {
-	fmt.Printf("[+] testing HashPasswordWithSalt: ")
 	pk := DeriveKeyWithSalt(testPass, refSalt)
 	if !bytes.Equal(pk.Key, refHash) {
 		fmt.Println("failed")
@@ -31,51 +29,32 @@ func TestHashPasswordWithSalt(t *testing.T) {
 		fmt.Println("[!] salts do not match")
 		t.FailNow()
 	}
-	fmt.Println("ok")
 }
 
 func TestMatchPassword(t *testing.T) {
-	fmt.Printf("[+] testing MatchPassword (and HashPassword): ")
 	pk := DeriveKey(testPass)
 	if !MatchPassword(testPass, pk) {
-		fmt.Println("failed")
 		fmt.Println("[!] password match failed when it should have passed")
 		t.FailNow()
 	}
-	fmt.Println("ok")
 }
 
 func TestEnsureFails(t *testing.T) {
-	fmt.Printf("[+] ensuring authentication fails for wrong password: ")
 	if MatchPassword("hello world", refPH) {
-		fmt.Println("failed")
 		fmt.Println("[!] authentication should not have succeeded!")
 		t.FailNow()
 	}
-	fmt.Println("ok")
 }
 
 func TestEmptyPassFails(t *testing.T) {
-	fmt.Printf("[+] ensuring empty password fails: ")
 	if MatchPassword("", refPH) {
-		fmt.Println("failed")
 		fmt.Println("[!] authentication should not have succeeded!")
 		t.FailNow()
 	}
-	fmt.Println("ok")
 }
 
 func BenchmarkHashPassword(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		DeriveKey(testPass)
 	}
-}
-
-func TestOneHashTime(t *testing.T) {
-	fmt.Println("[+] testing time for one password check")
-	start := time.Now()
-	MatchPassword("goodbye world", refPH)
-	stop := time.Now()
-	spent := stop.Sub(start)
-	fmt.Printf("[+] time spent: %s\n", spent.String())
 }
