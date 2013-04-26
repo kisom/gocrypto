@@ -162,7 +162,7 @@ func receive(gaddr *net.UDPAddr, ifi *net.Interface) {
 		out, err := DecodeMessage(msg[:n])
 		if err != nil {
 			log.Println("failed to decode message: ", err.Error())
-			log.Println("msg: %s\n\t%+v", string(msg), msg)
+			log.Printf("msg: %s\n\t%+v", string(msg), msg)
 			continue
 		}
 		Outgoing <- []byte(out)
