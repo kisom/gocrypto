@@ -2,9 +2,10 @@ package hash
 
 import (
 	"code.google.com/p/go.crypto/pbkdf2"
-        "io"
 	"crypto/rand"
+	"crypto/sha512"
 	"crypto/subtle"
+	"io"
 )
 
 var (
@@ -27,16 +28,16 @@ func generateSalt(chars int) (salt []byte, err error) {
 // DeriveKey generates a salt and returns a hashed version of the password.
 func DeriveKey(password string) *PasswordKey {
 	salt, err := generateSalt(SaltLength)
-        if err != nil {
-                return nil
-        }
+	if err != nil {
+		return nil
+	}
 	return DeriveKeyWithSalt(password, salt)
 }
 
 // DeriveKeyWithSalt hashes the password with the specified salt.
 func DeriveKeyWithSalt(password string, salt []byte) (ph *PasswordKey) {
 	key := pbkdf2.Key([]byte(password), salt, IterationCount,
-		KeySize, DefaultAlgo.New)
+		KeySize, sha512.New)
 	return &PasswordKey{salt, key}
 }
 
