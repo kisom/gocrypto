@@ -7,25 +7,27 @@ import (
 	"io"
 )
 
-var HashLen = sha512.Size
-
 type Digest []byte
+
+var HashAlgo = sha512.New
+
+const ReadSize = 4096
 
 // New computes a new digest computed from the byte slice passed in with the
 // algorithm specified by sha512.
 func New(buf []byte) Digest {
-	c := sha512.New()
+	c := HashAlgo()
 	c.Write(buf)
 	return c.Sum(nil)
 }
 
 // Read computes a new SHA-512 digest from the reader passed in.
 func Read(r io.Reader) (h Digest, err error) {
-	c := sha512.New()
+	c := HashAlgo()
 
 	for {
 		var n int
-		buf := make([]byte, sha512.BlockSize)
+		buf := make([]byte, ReadSize)
 
 		n, err = r.Read(buf)
 		if err != nil && err != io.EOF {
