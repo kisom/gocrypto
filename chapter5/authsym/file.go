@@ -8,142 +8,42 @@ import (
 )
 
 // Encrypt an io.Reader to an io.Writer
-func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
-	c, err := aes.NewCipher(key)
-	if err != nil {
-		return
-	}
+func encryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
+        iv, err := GenerateIV()
+        if err != nil {
+                return
+        }
 
-	iv, err := GenerateIV()
-	if err != nil {
-		return
-	}
+        aes, err := aes.NewCipher(key)
+        if err != nil {
+                return
+        }
 
-	n, err := w.Write(iv)
-	if err != nil {
-		return
-	} else if n != BlockSize {
-		err = IVSizeMismatchError
-		return
-	}
+        ctr := cipher.NewCTR(aes, iv)
+        buf := make([]byte, BlockSize)
 
-	cbc := cipher.NewCTR(c, iv)
+        for {
+                var rn int
+                rn, err = r.Read(buf)
+                if err != nil {
+                        if err == io.EOF {
+                                err = nil
+                        }
+                        return
+                }
 
-	// We use a cryptoBlock to differentiate between partial reads and
-	// EOF conditions.
-	cryptBlock := make([]byte, 0)
-
-	for {
-		if len(cryptBlock) == BlockSize {
-			cbc.XORKeyStream(cryptBlock, cryptBlock)
-			n, err = w.Write(cryptBlock)
-			if err != nil {
-				return
-			} else if n != BlockSize {
-				err = BlockSizeMismatchError
-				return
-			}
-			Zeroise(&cryptBlock)
-		}
-
-		readLen := BlockSize - len(cryptBlock)
-		buf := make([]byte, readLen)
-		n, err = r.Read(buf)
-		if err != nil && err != io.EOF {
-			return
-		} else if n > 0 {
-			cryptBlock = append(cryptBlock, buf[0:n]...)
-		}
-
-		if err != nil && err == io.EOF {
-			err = nil
-			break
-		}
-	}
-
-	cryptBlock, err = PadBuffer(cryptBlock)
-	if err != nil {
-		return
-	} else if (len(cryptBlock) % BlockSize) != 0 {
-		err = BlockSizeMismatchError
-		return
-	}
-	cbc.XORKeyStream(cryptBlock, cryptBlock)
-	n, err = w.Write(cryptBlock)
-	if err != nil {
-		return
-	} else if n != BlockSize {
-		err = BlockSizeMismatchError
-	}
-	return
+                ctr.XORKeyStream(buf[:rn], buf[:rn])
+                _, err = w.Write(buf[:rn])
+                if err != nil {
+                        return
+                }
+        }
+        return
 }
 
 // Decrypt an io.Reader to an io.Writer.
-func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
-	c, err := aes.NewCipher(key)
-	if err != nil {
-		return
-	}
-
-	iv := make([]byte, BlockSize)
-	n, err := r.Read(iv)
-	if err != nil {
-		return
-	} else if n != BlockSize {
-		err = IVSizeMismatchError
-		return
-	}
-
-	cbc := cipher.NewCTR(c, iv)
-
-	// We use a cryptoBlock to differentiate between partial reads
-	// and EOF conditions.
-	cryptBlock := make([]byte, 0)
-
-	for {
-		if len(cryptBlock) == BlockSize {
-			cbc.XORKeyStream(cryptBlock, cryptBlock)
-			cryptBlock, err = unpadBlock(cryptBlock)
-			if err != nil {
-				return
-			}
-			n, err = w.Write(cryptBlock)
-			if err != nil {
-				return
-			}
-			Zeroise(&cryptBlock)
-		}
-
-		readLen := BlockSize - len(cryptBlock)
-		buf := make([]byte, readLen)
-		n, err = r.Read(buf)
-		if err != nil && err != io.EOF {
-			return
-		} else if n > 0 {
-			cryptBlock = append(cryptBlock, buf[0:n]...)
-		}
-
-		if err != nil && err == io.EOF {
-			err = nil
-			break
-		}
-	}
-
-	if len(cryptBlock) > 0 {
-		cryptBlock, err = UnpadBuffer(cryptBlock)
-		if err != nil {
-			return
-		}
-
-		cbc.XORKeyStream(cryptBlock, cryptBlock)
-		n, err = w.Write(cryptBlock)
-		if err != nil {
-			return
-		} else if n != BlockSize {
-			err = BlockSizeMismatchError
-		}
-	}
-	return
+func decryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
+        return
 }
 
 // Encrypt the input file to the output file.
@@ -183,12 +83,3 @@ func DecryptFile(in, out string, key []byte) (err error) {
 	return
 }
 
-func unpadBlock(p []byte) (m []byte, err error) {
-	m = p
-	origLen := len(m)
-
-	if m[origLen-1] != 0x0 && m[origLen-1] != 0x80 {
-		return
-	}
-	return UnpadBuffer(m)
-}
