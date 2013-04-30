@@ -1,12 +1,12 @@
 package authsym
 
 import (
-        "crypto/rand"
-        "crypto/cipher"
-        "crypto/aes"
-        "fmt"
-        "io"
-        "os"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"fmt"
+	"io"
+	"os"
 )
 
 // Random returns a byte slice containing size random bytes.
@@ -26,8 +26,8 @@ func GenerateKey() (key []byte, err error) {
 func GenerateLTKey() (key []byte, err error) {
 	devRandom, err := os.Open("/dev/random")
 	if err != nil {
-                return
-        }
+		return
+	}
 	key = make([]byte, KeySize)
 	_, err = io.ReadFull(devRandom, key)
 	return
@@ -36,38 +36,40 @@ func GenerateLTKey() (key []byte, err error) {
 // GenerateIV returns an initialisation vector suitable for
 // AES-CBC encryption.
 func GenerateIV() (iv []byte, err error) {
-	return Random(aes.BlockSize)
+	return Random(BlockSize)
 }
 
-func encrypt(key, ct []byte) (pt []byte, err error) {
-        buf := ct[:]
-        aes, err := aes.NewCipher(key)
-        if err != nil {
-                return
-        }
+func encrypt(key, pt []byte) (ct []byte, err error) {
+	buf := make([]byte, len(pt))
+	copy(buf, pt)
 
-        pt, err = GenerateIV()
-        if err != nil {
-                return
-        }
+	aes, err := aes.NewCipher(key)
+	if err != nil {
+		return
+	}
 
-        ctr := cipher.NewCTR(aes, pt)
-        ctr.XORKeyStream(buf, buf)
-        pt = append(pt, buf...)
-        return
+	ct, err = GenerateIV()
+	if err != nil {
+		return
+	}
+
+	ctr := cipher.NewCTR(aes, ct)
+	ctr.XORKeyStream(buf, buf)
+	ct = append(ct, buf...)
+	return
 }
 
-func decrypt(key, pt []byte) (ct []byte, err error) {
-        iv := pt[:BlockSize]
-        ct = pt[BlockSize:]
-        aes, err := aes.NewCipher(key)
-        if err != nil {
-                return
-        }
+func decrypt(key, ct []byte) (pt []byte, err error) {
+	iv := ct[:BlockSize]
+	pt = ct[BlockSize:]
+	aes, err := aes.NewCipher(key)
+	if err != nil {
+		return
+	}
 
-        ctr := cipher.NewCTR(aes, iv)
-        ctr.XORKeyStream(ct, ct)
-        return
+	ctr := cipher.NewCTR(aes, iv)
+	ctr.XORKeyStream(pt, pt)
+	return
 }
 
 // Zeroise wipes out the data in a slice before deleting the array.
