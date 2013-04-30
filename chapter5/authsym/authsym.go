@@ -2,18 +2,18 @@ package authsym
 
 import (
 	"crypto/hmac"
-	"crypto/sha512"
+	"crypto/sha256"
 	"crypto/subtle"
 	"fmt"
+	"io"
 )
 
+const HashLen = 32
+
 func Hmac(key, in []byte) (hash []byte, err error) {
-	h := hmac.New(sha512.New, key)
-	n, err := h.Write(in)
+	h := hmac.New(sha256.New, key)
+	_, err = h.Write(in)
 	if err != nil {
-		return
-	} else if n != len(in) {
-		err = fmt.Errorf("failed to compute HMAC")
 		return
 	}
 	hash = h.Sum(nil)
@@ -33,32 +33,34 @@ func CompareHash(hash, key, in []byte) bool {
 		return false
 	}
 
-	for i := 0; i < sha512.Size; i++ {
+	for i := 0; i < HashLen; i++ {
 		matched += subtle.ConstantTimeByteEq(hash[i], in_hash[i])
 	}
 
-	return matched == sha512.Size
+	return matched == HashLen
 }
 
-func Encrypt(key, plaintext []byte) (authct []byte, err error) {
-	ciphertext, err := encrypt(key, plaintext)
+func Encrypt(key, pt []byte) (authct []byte, err error) {
+	var hash []byte
+
+	authct, err = encrypt(key, pt)
 	if err != nil {
 		return
-	}
-
-	authct, err = Hmac(key, ciphertext)
-	if err == nil {
-		authct = append(authct, ciphertext...)
+	} else if hash, err = Hmac(key, authct); err != nil {
+		return
+	} else {
+		authct = append(authct, hash...)
 	}
 	return
 }
 
 func Decrypt(key, ciphertext []byte) (pt []byte, err error) {
-	hash := ciphertext[:sha512.Size]
-	ct := ciphertext[sha512.Size:]
+	hashLocation := len(ciphertext) - HashLen
+	ct := ciphertext[:hashLocation]
+	hash := ciphertext[hashLocation:]
 
-	pt, err = decrypt(key, ct)
 	match := CompareHash(hash, key, ct)
+	pt, err = decrypt(key, ct)
 	if err == nil && !match {
 		err = fmt.Errorf("Invalid HMAC")
 		Scrub(pt, 3)
