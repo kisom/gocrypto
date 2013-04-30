@@ -2,7 +2,7 @@ package hash
 
 import (
 	"bytes"
-	"crypto/sha512"
+	"code.google.com/p/go.crypto/sha3"
 	"fmt"
 	"io"
 )
@@ -10,14 +10,14 @@ import (
 type Digest []byte
 
 var (
-        HashAlgo = sha512.New
-        HashLen = sha512.Size
+        HashAlgo = sha3.NewKeccak512
+        HashLen = 64
 )
 
 const ReadSize = 4096
 
 // New computes a new digest computed from the byte slice passed in with the
-// algorithm specified by sha512.
+// algorithm specified by sha3.
 func New(buf []byte) Digest {
 	c := HashAlgo()
 	c.Write(buf)

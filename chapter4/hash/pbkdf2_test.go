@@ -25,7 +25,6 @@ func TestHashPasswordWithSalt(t *testing.T) {
 		fmt.Println("[!] hashes do not match")
 		t.FailNow()
 	} else if !bytes.Equal(pk.Salt, refSalt) {
-		fmt.Println("failed")
 		fmt.Println("[!] salts do not match")
 		t.FailNow()
 	}
