@@ -2,7 +2,7 @@ package hash
 
 import (
 	"bytes"
-	"code.google.com/p/go.crypto/sha3"
+        "crypto/sha512"
 	"fmt"
 	"io"
 )
@@ -10,7 +10,7 @@ import (
 type Digest []byte
 
 var (
-        HashAlgo = sha3.NewKeccak512
+        HashAlgo = sha512.New
         HashLen = 64
 )
 
