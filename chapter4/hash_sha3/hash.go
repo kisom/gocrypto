@@ -10,8 +10,8 @@ import (
 type Digest []byte
 
 var (
-        HashAlgo = sha3.NewKeccak512
-        HashLen = 64
+	HashAlgo = sha3.NewKeccak512
+	HashLen  = 64
 )
 
 const ReadSize = 4096

@@ -2,7 +2,7 @@ package hash
 
 import (
 	"bytes"
-        "crypto/sha512"
+	"crypto/sha512"
 	"fmt"
 	"io"
 )
@@ -10,8 +10,8 @@ import (
 type Digest []byte
 
 var (
-        HashAlgo = sha512.New
-        HashLen = 64
+	HashAlgo = sha512.New
+	HashLen  = 64
 )
 
 const ReadSize = 4096
