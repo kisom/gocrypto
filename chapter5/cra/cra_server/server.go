@@ -1,29 +1,59 @@
 package main
 
 import (
-	"crypto/sha256"
+	"crypto/rand"
+	"crypto/sha3"
+        "crypto/subtle"
 	"flag"
 	"fmt"
 	"log"
+	"math"
+	"math/big"
 	"net"
 	"os"
 )
 
 var Password string
 
+var matchHash(hash1, hash2) bool {
+        var size = len(hash1)
+        if size > len(hash2) {
+                size = len(hash2)
+        }
+
+        var matched = 0
+        for i := 0; i < size; i++ {
+                matched += subtle.ConstantTimeByteEq(hash1[i], hash2[i])
+        }
+
+        match := (matched == size)
+        sameSize := len(hash1) == len(hash2)
+        return match && sameSize
+}
+
 func randomNumber() uint64 {
 	max := big.NewInt((math.MaxInt64))
 	n, err := rand.Int(rand.Reader, max)
 	if err != nil {
-		panic("couldn't generate random value: " + err.Error())
+		fmt.Println("[!] failed to generate random number:",
+			err.Error())
+		os.Exit(1)
 	}
 	res := uint64(n.Int64())
 	return res
 }
 
+func hash(data string) string {
+	c := sha512.New()
+	_, err := c.Write([]byte(data))
+	if err != nil {
+		return ""
+	}
+	return fmt.Sprintf("%x", c.Sum(nil))
+}
+
 func validateChallenge(chal string, resp string) bool {
-	data := fmt.Sprintf("%s%s", Password, chal)
-	data = string(hash(data))
+	data := hash(Password + chal)
 
 	if data != resp {
 		return false
@@ -36,12 +66,12 @@ func sendChallenge(conn net.Conn) {
 	chal := fmt.Sprintf("%d", randomNumber())
 	conn.Write([]byte(chal))
 
-	resp := make([]byte, sha256.Size*2)
+	resp := make([]byte, sha512.Size*2)
 	n, err := conn.Read(resp)
 	if err != nil {
 		conn.Write([]byte("error: " + err.Error()))
 		return
-	} else if n != (sha256.Size * 2) {
+	} else if n != (sha512.Size * 2) {
 		conn.Write([]byte("error: invalid response"))
 		return
 	}
