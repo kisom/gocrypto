@@ -81,7 +81,7 @@ func decryptFile(inFile, outFile, passphrase string) (err error) {
 	}
 	defer outWriter.Close()
 
-	_, err := io.ReadFull(inReader, salt)
+	_, err = io.ReadFull(inReader, salt)
 	if err != nil {
 		return
 	}
