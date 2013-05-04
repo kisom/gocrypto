@@ -1,4 +1,3 @@
-// HAP server
 package main
 
 import (
@@ -15,54 +14,20 @@ var password string
 func authenticate(conn net.Conn) {
 	defer conn.Close()
 
-	challenge := hap.Challenge()
-	_, err := conn.Write([]byte(challenge))
+	err := hap.Challenge(conn, password)
 	if err != nil {
-		log.Println("[!] error sending challenge:", err.Error())
+		log.Println("challenge failed:", err.Error())
 		return
 	}
 
-	response := make([]byte, hap.ResponseLength)
-	n, err := conn.Read(response)
+	err = hap.Authenticate(conn, password)
 	if err != nil {
-		log.Println("[!] error reading response from client:", err.Error())
-		return
-	} else {
-		response = response[:n]
-	}
-
-	if !hap.Validate(password, challenge, response) {
-		log.Println("[!] client failed authentication")
-		return
-	}
-
-	conn.Write([]byte("ok"))
-
-	srvChal := make([]byte, hap.ResponseLength)
-	n, err = conn.Read(srvChal)
-	if err != nil {
-		log.Println("[!] error reading challenge from client:", err.Error())
-		return
-	} else {
-		srvChal = srvChal[:n]
-	}
-
-	srvResponse := hap.Response(password, string(srvChal))
-	_, err = conn.Write([]byte(srvResponse))
-	if err != nil {
-		log.Println("[!] failed to send response:", err.Error())
-		return
-	}
-
-	ok := make([]byte, 2)
-	_, err = conn.Read(ok)
-	if err != nil {
-		log.Println("failed to receive acknowledgement")
+		log.Println("authentication failed:", err.Error())
 		return
 	}
 
 	request := make([]byte, RequestLength)
-	n, err = conn.Read(request)
+	_, err = conn.Read(request)
 	if err != nil {
 		log.Println("error reading client request:", err.Error())
 		return
