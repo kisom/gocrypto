@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math"
 	"math/big"
+	"net"
 	"os"
 )
 
@@ -18,7 +19,7 @@ func hash(in []byte) []byte {
 	return h.Sum(nil)
 }
 
-func Challenge() string {
+func generateChallenge() string {
 	max := big.NewInt(math.MaxInt64)
 	max.Mul(max, big.NewInt(2))
 	n, err := rand.Int(rand.Reader, max)
@@ -55,4 +56,50 @@ func matchHash(hash1, hash2 []byte) bool {
 func Validate(password, challenge string, response []byte) bool {
 	valid := Response(password, challenge)
 	return matchHash(valid, response)
+}
+
+func Challenge(conn net.Conn, password string) (err error) {
+	challenge := generateChallenge()
+	_, err = conn.Write([]byte(challenge))
+	if err != nil {
+		return
+	}
+
+	response := make([]byte, ResponseLength)
+	n, err := conn.Read(response)
+	if err != nil {
+		return
+	} else {
+		response = response[:n]
+	}
+
+	if !Validate(password, challenge, response) {
+		return
+	}
+
+	conn.Write([]byte("ok"))
+	return
+}
+
+func Authenticate(conn net.Conn, password string) (err error) {
+	challenge := make([]byte, ResponseLength)
+	n, err := conn.Read(challenge)
+	if err != nil {
+		return
+	} else {
+		challenge = challenge[:n]
+	}
+
+	response := Response(password, string(challenge))
+	_, err = conn.Write([]byte(response))
+	if err != nil {
+		return
+	}
+
+	ok := make([]byte, 2)
+	_, err = conn.Read(ok)
+	if err != nil {
+		return
+	}
+	return
 }
