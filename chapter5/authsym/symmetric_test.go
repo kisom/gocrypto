@@ -87,7 +87,7 @@ func TestEncryptDecryptBlockFails(t *testing.T) {
 		FailWithError(t, err)
 	}
 
-        n := len(e) - 2
+	n := len(e) - 2
 	orig := e[n]
 	if e[n] == 255 {
 		e[n] = 0

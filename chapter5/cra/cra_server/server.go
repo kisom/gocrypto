@@ -2,8 +2,8 @@ package main
 
 import (
 	"crypto/rand"
-	"crypto/sha3"
-        "crypto/subtle"
+	"crypto/sha512"
+	"crypto/subtle"
 	"flag"
 	"fmt"
 	"log"
@@ -15,20 +15,20 @@ import (
 
 var Password string
 
-var matchHash(hash1, hash2) bool {
-        var size = len(hash1)
-        if size > len(hash2) {
-                size = len(hash2)
-        }
+func matchHash(hash1, hash2 []byte) bool {
+	var size = len(hash1)
+	if size > len(hash2) {
+		size = len(hash2)
+	}
 
-        var matched = 0
-        for i := 0; i < size; i++ {
-                matched += subtle.ConstantTimeByteEq(hash1[i], hash2[i])
-        }
+	var matched = 0
+	for i := 0; i < size; i++ {
+		matched += subtle.ConstantTimeByteEq(hash1[i], hash2[i])
+	}
 
-        match := (matched == size)
-        sameSize := len(hash1) == len(hash2)
-        return match && sameSize
+	match := (matched == size)
+	sameSize := len(hash1) == len(hash2)
+	return match && sameSize
 }
 
 func randomNumber() uint64 {
