@@ -7,9 +7,12 @@ a sniffer to grab challenges and their responses, and rogue, the rogue
 client that doesn't need a password. The server has been modified to use
 an 8-bit challenge instead of the 64-bit one used in the book.
 
-To build the sniffer, you will need libpcap. Running the sniffer will
-most likely require root (or administrative) privileges to listen on
-the network interface, just as with the `tcpdump` program.
+To build the sniffer, you will need libpcap and libsqlite. Running the
+sniffer will most likely require root (or administrative) privileges to
+listen on the network interface, just as with the `tcpdump` program. The
+sniffer records challenges and responses in a SQLite3 database in the
+`challenges` table, with the columns `server`, `challenge`, and
+`response`
 
 To see it in action, start up the server. Then, fire up the sniffer.
 At any point, after this, you can fire up the rogue client. Make sure to
