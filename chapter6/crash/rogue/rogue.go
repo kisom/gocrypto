@@ -80,13 +80,15 @@ func connect(server string) (success bool) {
 }
 
 func spoof(server string) {
+	var i = 0
 	for {
+		i++
 		if connect(server) {
-			fmt.Println("[+] successfully connected to server")
 			break
 		}
 		<-time.After(1 * time.Second)
 	}
+	fmt.Println("succeeds after", i, "attempts.")
 	close(shutdown)
 }
 
