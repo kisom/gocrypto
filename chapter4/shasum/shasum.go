@@ -7,23 +7,55 @@ import (
 	_ "crypto/sha512"
 	"flag"
 	"fmt"
-	"github.com/kisom/gocrypto/chapter4/hash"
+	"hash"
+	"io"
 	"os"
 )
 
+const ReadSize = 4096
+
 var (
-	algorithm crypto.Hash
+	algorithm func() hash.Hash
 	files     []string
 )
 
-func matchAlgo(a int) crypto.Hash {
+type Digest []byte
+
+// Return the hex version of a digest.
+func (h Digest) HexDigest() string {
+	return fmt.Sprintf("%x", h)
+}
+
+// Read computes a new digest from the contents of a Reader.
+func HashReader(r io.Reader, algo func() hash.Hash) (h Digest, err error) {
+	c := algo()
+
+	for {
+		var n int
+		buf := make([]byte, ReadSize)
+
+		n, err = r.Read(buf)
+		if err != nil && err != io.EOF {
+			return
+		}
+		c.Write(buf[:n])
+		if err == io.EOF {
+			err = nil
+			break
+		}
+	}
+	h = c.Sum(nil)
+	return
+}
+
+func matchAlgo(a int) func() hash.Hash {
 	switch a {
 	case 1:
-		return crypto.SHA1
+		return crypto.SHA1.New
 	case 256:
-		return crypto.SHA256
+		return crypto.SHA256.New
 	case 512:
-		return crypto.SHA512
+		return crypto.SHA512.New
 	default:
 		fmt.Printf("[!] invalid algorithm. Valid algorithms ")
 		fmt.Printf(" are 1, 256, and 512")
@@ -36,7 +68,6 @@ func init() {
 	flagAlgo := flag.Int("a", 512, "algorithm to use for hashing")
 	flag.Parse()
 	algorithm = matchAlgo(*flagAlgo)
-	fmt.Printf("algo: %+v\n", algorithm)
 	files = flag.Args()
 
 	if len(files) == 0 {
@@ -56,7 +87,7 @@ func main() {
 		}
 		defer file.Close()
 
-		h, err := hash.ReadWith(file, algorithm)
+		h, err := HashReader(file, algorithm)
 		if err != nil {
 			errorList = append(errorList,
 				fmt.Sprintf("%s: %s", filename, err.Error))
