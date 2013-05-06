@@ -12,7 +12,9 @@ sniffer will most likely require root (or administrative) privileges to
 listen on the network interface, just as with the `tcpdump` program. The
 sniffer records challenges and responses in a SQLite3 database in the
 `challenges` table, with the columns `server`, `challenge`, and
-`response`
+`response`. I haven't had any success getting this to work properly
+on OpenBSD or OS X, which I haven't quite worked out yet the reasons
+why it's failing.
 
 To see it in action, start up the server. Then, fire up the sniffer.
 At any point, after this, you can fire up the rogue client. Make sure to
