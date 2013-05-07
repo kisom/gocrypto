@@ -4,14 +4,16 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/kisom/gocrypto/chapter2/symmetric"
-	"github.com/kisom/gocrypto/chapter4/hash"
-	"io"
+	"github.com/kisom/gocrypto/chapter6/timethief/badcrypto"
+	"io/ioutil"
 	"os"
 	"strings"
 )
 
-var ErrWrite = fmt.Errorf("write error")
+var (
+	ErrWrite = fmt.Errorf("write error")
+	key      []byte
+)
 
 func readPrompt(prompt string) (input string, err error) {
 	fmt.Printf(prompt)
@@ -24,12 +26,45 @@ func readPrompt(prompt string) (input string, err error) {
 	return
 }
 
+func genkey(filename string) {
+	var err error
+
+	key, err = badcrypto.GenerateKey()
+	if err != nil {
+		fmt.Println("[!] failed to generate key:", err.Error())
+		os.Exit(1)
+	}
+	fmt.Println("[+] generating new key")
+	err = ioutil.WriteFile(filename, key, 0600)
+	if err != nil {
+		fmt.Println("[!] failed to write key:", err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
+}
+
 func main() {
 	shouldDecrypt := flag.Bool("d", false, "decrypt the input file")
 	shouldEncrypt := flag.Bool("e", false, "encrypt the input file")
+	genKeyFile := flag.String("genkey", "", "generate a new key")
+	keyFile := flag.String("k", "", "key file")
 	inFile := flag.String("in", "", "input file")
 	outFile := flag.String("out", "", "output file")
 	flag.Parse()
+
+	var err error
+	if *keyFile == "" && *genKeyFile == "" {
+		fmt.Println("[!] no key specified and not generating a key, nothing to do.")
+		os.Exit(1)
+	} else if *keyFile != "" {
+		key, err = ioutil.ReadFile(*keyFile)
+		if err != nil {
+			fmt.Println("[!]", err.Error())
+			os.Exit(1)
+		}
+	} else if *genKeyFile != "" {
+		genkey(*genKeyFile)
+	}
 
 	if len(*inFile) == 0 {
 		fmt.Println("[!] no input file specified (specify one with -in)")
@@ -48,16 +83,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	passphrase, err := readPrompt("Passphrase: ")
-	if err != nil {
-		fmt.Println("[!] error reading passphrase:", err.Error())
-		os.Exit(1)
-	}
-
 	if *shouldDecrypt {
-		err = decryptFile(*inFile, *outFile, passphrase)
+		err = badcrypto.DecryptFile(*inFile, *outFile, key)
 	} else {
-		err = encryptFile(*inFile, *outFile, passphrase)
+		err = badcrypto.EncryptFile(*inFile, *outFile, key)
 	}
 
 	if err != nil {
@@ -65,55 +94,4 @@ func main() {
 	} else {
 		fmt.Println("[+] ok")
 	}
-}
-
-func decryptFile(inFile, outFile, passphrase string) (err error) {
-	salt := make([]byte, hash.SaltLength)
-	inReader, err := os.Open(inFile)
-	if err != nil {
-		return
-	}
-	defer inReader.Close()
-
-	outWriter, err := os.Create(outFile)
-	if err != nil {
-		return
-	}
-	defer outWriter.Close()
-
-	_, err = io.ReadFull(inReader, salt)
-	if err != nil {
-		return
-	}
-
-	key := hash.DeriveKeyWithSalt(passphrase, salt)
-	err = symmetric.DecryptReader(key.Key, inReader, outWriter)
-	return
-}
-
-func encryptFile(inFile, outFile, passphrase string) (err error) {
-	key := hash.DeriveKey(passphrase)
-
-	inReader, err := os.Open(inFile)
-	if err != nil {
-		return
-	}
-	defer inReader.Close()
-
-	outWriter, err := os.Create(outFile)
-	if err != nil {
-		return
-	}
-	defer outWriter.Close()
-
-	n, err := outWriter.Write(key.Salt)
-	if err != nil {
-		return
-	} else if n != len(key.Salt) {
-		err = ErrWrite
-		return
-	}
-
-	err = symmetric.EncryptReader(key.Key, inReader, outWriter)
-	return
 }

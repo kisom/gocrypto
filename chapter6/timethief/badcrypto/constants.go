@@ -1,4 +1,4 @@
-package symmetric
+package badcrypto
 
 // constants for the symmetric cryptographic functions.
 
@@ -18,4 +18,5 @@ var (
 	BadBlockError          = fmt.Errorf("bad block")
 	BlockSizeMismatchError = fmt.Errorf("block not the proper length")
 	IVSizeMismatchError    = fmt.Errorf("IV not the proper length")
+	BadDecryptionError     = fmt.Errorf("bad decryption")
 )
