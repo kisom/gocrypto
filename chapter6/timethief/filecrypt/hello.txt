@@ -1,0 +1,2 @@
+Hello, world. This is an example of how bad random data can compromise the
+security of a system.
