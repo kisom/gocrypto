@@ -62,7 +62,6 @@ func main() {
 }
 
 func scan(start, stop int64, infile, savefile string) {
-	var count = 0
 	for i := start; i < stop; i++ {
 		key, err := genkey(i)
 		if err != nil {
