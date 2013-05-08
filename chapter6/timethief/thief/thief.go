@@ -72,8 +72,10 @@ func scan(start, stop int64, infile, savefile string) {
 			fmt.Println("[!] failed to generate temp file:", err.Error())
 			os.Exit(1)
 		}
-		defer os.Remove(tmp)
 		err = badcrypto.DecryptFile(infile, tmp, key)
+		if rmErr := os.Remove(tmp); rmErr != nil {
+			fmt.Println("error removing", tmp, ":", err.Error())
+		}
 		if err != nil {
 			continue
 		}
