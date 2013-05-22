@@ -35,12 +35,14 @@ func TestGenerateKey(t *testing.T) {
 }
 
 // Test long term key generation.
+/*
 func TestGenerateLTKey(t *testing.T) {
 	key, err := GenerateLTKey()
 	if err != nil || len(key) != KeySize {
 		FailWithError(t, err)
 	}
 }
+ */
 
 // Test initialisation vector generation.
 func TestGenerateIV(t *testing.T) {
@@ -52,17 +54,20 @@ func TestGenerateIV(t *testing.T) {
 
 // Does D(E(k,m)) == m?
 func TestEncryptDecryptBlock(t *testing.T) {
+	fmt.Println("encrypt block")
 	m := []byte("Hello, world.")
 	key, err := GenerateKey()
 	if err != nil {
 		FailWithError(t, err)
 	}
 
+	fmt.Println("\tencrypt")
 	e, err := Encrypt(key, m)
 	if err != nil {
 		FailWithError(t, err)
 	}
 
+	fmt.Println("\tdecrypt")
 	decrypted, err := Decrypt(key, e)
 	if err != nil {
 		FailWithError(t, err)
@@ -72,6 +77,7 @@ func TestEncryptDecryptBlock(t *testing.T) {
 		err = fmt.Errorf("plaintext doesn't match original message")
 		FailWithError(t, err)
 	}
+	fmt.Println("finish encrypt block")
 }
 
 func TestEncryptDecryptBlockFails(t *testing.T) {
