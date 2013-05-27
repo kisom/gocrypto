@@ -3,6 +3,8 @@ package pkc
 import "bytes"
 import "crypto/rsa"
 import "fmt"
+import "io/ioutil"
+import "os"
 import "testing"
 
 var (
@@ -10,6 +12,15 @@ var (
 	testct  []byte
 	testmsg []byte
 )
+
+func tempFileName() string {
+	tmpf, err := ioutil.TempFile("", "pkc-rsa_test_")
+	if err != nil {
+		return ""
+	}
+	defer tmpf.Close()
+	return tmpf.Name()
+}
 
 func TestGenerateKey(t *testing.T) {
 	var err error
@@ -22,8 +33,6 @@ func TestGenerateKey(t *testing.T) {
 		fmt.Println("generated bad key:", err.Error())
 		t.FailNow()
 	}
-	fmt.Println("INFO: max message length:",
-		MaxMessageLength(&testkey.PublicKey))
 }
 
 func TestEncrypt(t *testing.T) {
@@ -44,6 +53,60 @@ func TestDecrypt(t *testing.T) {
 		t.FailNow()
 	} else if !bytes.Equal(decrypted, testmsg) {
 		fmt.Println("malformed decrypted plaintext")
+		t.FailNow()
+	}
+}
+
+func TestExportPrivateKey(t *testing.T) {
+	certFile := tempFileName()
+	if certFile == "" {
+		fmt.Println("couldn't create a temporary file")
+		t.FailNow()
+	}
+	defer os.Remove(certFile)
+
+	err := ExportPrivateKey(testkey, certFile)
+	if err != nil {
+		fmt.Println("error exporting key:", err.Error())
+		t.FailNow()
+	}
+
+	inprv, err := ImportPrivateKey(certFile)
+	if err != nil {
+		fmt.Println("error importing key:", err.Error())
+		t.FailNow()
+	} else if err = inprv.Validate(); err != nil {
+		fmt.Println("imported key is invalid")
+		t.FailNow()
+	}
+}
+
+func TestExportPublicKey(t *testing.T) {
+	certFile := tempFileName()
+	if certFile == "" {
+		fmt.Println("couldn't create a temporary file")
+		t.FailNow()
+	}
+	defer os.Remove(certFile)
+
+	err := ExportPublicKey(&testkey.PublicKey, certFile)
+	if err != nil {
+		fmt.Println("error exporting key:", err.Error())
+		t.FailNow()
+	}
+
+	pub := &testkey.PublicKey
+	inpub, err := ImportPublicKey(certFile)
+	if err != nil {
+		fmt.Println("error importing key:", err.Error())
+		t.FailNow()
+	}
+
+	if pub.N.Cmp(inpub.N) != 0 {
+		fmt.Println("imported key's modulus doesn't match")
+		t.FailNow()
+	} else if inpub.E != pub.E {
+		fmt.Println("imported key's exponent doesn't match")
 		t.FailNow()
 	}
 }
