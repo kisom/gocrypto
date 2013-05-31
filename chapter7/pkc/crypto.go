@@ -126,19 +126,19 @@ func ImportPEM(filename string) (prv *rsa.PrivateKey, pub *rsa.PublicKey, err er
 		}
 		switch blk.Type {
 		case "RSA PRIVATE KEY":
-			prv, err = x509.ParsePKCS1PrivateKey(cert)
+			prv, err = x509.ParsePKCS1PrivateKey(blk.Bytes)
 			if err != nil {
 				return
 			}
 		case "RSA PUBLIC KEY":
 			var in interface{}
-			in, err = x509.ParsePKIXPublicKey(cert)
+			in, err = x509.ParsePKIXPublicKey(blk.Bytes)
 			if err != nil {
 				return
 			}
 			pub = in.(*rsa.PublicKey)
 		}
-		if cert == nil {
+		if cert == nil || len(cert) == 0 {
 			break
 		} else if pub != nil && prv != nil {
 			break

@@ -110,3 +110,60 @@ func TestExportPublicKey(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestExportPrivateKeyPEM(t *testing.T) {
+	certFile := tempFileName()
+	if certFile == "" {
+		fmt.Println("couldn't create a temporary file")
+		t.FailNow()
+	}
+	defer os.Remove(certFile)
+
+	err := ExportPrivatePEM(testkey, certFile)
+	if err != nil {
+		fmt.Println("error exporting key:", err.Error())
+		t.FailNow()
+	}
+
+	inprv, pub, err := ImportPEM(certFile)
+	if err != nil {
+		fmt.Println("error importing key:", err.Error())
+		t.FailNow()
+	} else if err = inprv.Validate(); err != nil {
+		fmt.Println("imported key is invalid")
+		t.FailNow()
+	} else if pub != nil {
+		fmt.Println("public key should not be imported")
+		t.FailNow()
+	}
+}
+
+func TestExportPublicKeyPEM(t *testing.T) {
+	certFile := tempFileName()
+	if certFile == "" {
+		fmt.Println("couldn't create a temporary file")
+		t.FailNow()
+	}
+	defer os.Remove(certFile)
+
+	err := ExportPublicPEM(&testkey.PublicKey, certFile)
+	if err != nil {
+		fmt.Println("error exporting key:", err.Error())
+		t.FailNow()
+	}
+
+	prv, pub, err := ImportPEM(certFile)
+	if err != nil {
+		fmt.Println("error importing key:", err.Error())
+		t.FailNow()
+	} else if prv != nil {
+		fmt.Println("private key should not be imported")
+		t.FailNow()
+	} else if pub == nil {
+		fmt.Println("public key was not imported")
+		t.FailNow()
+	} else if pub.E != 65537 {
+		fmt.Println("bad exponent in public key")
+		t.FailNow()
+	}
+}
