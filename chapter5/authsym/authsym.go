@@ -13,20 +13,6 @@ import (
 )
 
 const HashLen = 32
-var msgNumChan chan int64
-
-func init() {
-	msgNumChan := make(chan int64, 1)
-
-	go func() {
-		var msgNum int64
-		for {
-			fmt.Printf("msg number: %d\n", msgNum);
-			msgNumChan<-msgNum
-			msgNum++
-		}
-	}()
-}
 
 func Hmac(key, in []byte) (hash []byte, err error) {
 	h := hmac.New(sha256.New, key)
@@ -80,12 +66,6 @@ func encrypt(key, pt []byte) (ct []byte, err error) {
 func Encrypt(key, pt []byte) (authct []byte, err error) {
 	var hash []byte
 
-	fmt.Println("get msgno")
-	msgno := <-msgNumChan
-	fmt.Println("prepend msgno")
-	msgnum := []byte(fmt.Sprintf("%0d", msgno))
-	pt = append(msgnum, pt...)
-	fmt.Println("encrypt")
 	authct, err = encrypt(key, pt)
 	if err != nil {
 		return
@@ -121,8 +101,6 @@ func Decrypt(key, message []byte) (pt []byte, err error) {
 		err = fmt.Errorf("Invalid HMAC")
 		Scrub(pt, 3)
 		pt = []byte{}
-	} else {
-		pt = pt[8:]
 	}
 	return
 }
