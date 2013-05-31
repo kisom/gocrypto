@@ -32,17 +32,16 @@ func TestGenerateKey(t *testing.T) {
 	if err != nil || len(key) != KeySize {
 		FailWithError(t, err)
 	}
+	testKey = key
 }
 
 // Test long term key generation.
-/*
 func TestGenerateLTKey(t *testing.T) {
 	key, err := GenerateLTKey()
 	if err != nil || len(key) != KeySize {
 		FailWithError(t, err)
 	}
 }
- */
 
 // Test initialisation vector generation.
 func TestGenerateIV(t *testing.T) {
@@ -54,20 +53,17 @@ func TestGenerateIV(t *testing.T) {
 
 // Does D(E(k,m)) == m?
 func TestEncryptDecryptBlock(t *testing.T) {
-	fmt.Println("encrypt block")
 	m := []byte("Hello, world.")
 	key, err := GenerateKey()
 	if err != nil {
 		FailWithError(t, err)
 	}
 
-	fmt.Println("\tencrypt")
 	e, err := Encrypt(key, m)
 	if err != nil {
 		FailWithError(t, err)
 	}
 
-	fmt.Println("\tdecrypt")
 	decrypted, err := Decrypt(key, e)
 	if err != nil {
 		FailWithError(t, err)
@@ -77,7 +73,6 @@ func TestEncryptDecryptBlock(t *testing.T) {
 		err = fmt.Errorf("plaintext doesn't match original message")
 		FailWithError(t, err)
 	}
-	fmt.Println("finish encrypt block")
 }
 
 func TestEncryptDecryptBlockFails(t *testing.T) {
@@ -173,25 +168,20 @@ func BenchmarkEncryptBlock(b *testing.B) {
 
 		key, err := GenerateKey()
 		if err != nil {
-			fmt.Println("symkey")
-			fmt.Println(err.Error())
 			b.FailNow()
 		}
 
 		e, err := Encrypt(key, m)
 		if err != nil {
-			fmt.Println("encrypt")
 			b.FailNow()
 		}
 
 		decrypted, err := Decrypt(key, e)
 		if err != nil {
-			fmt.Println("decrypt")
 			b.FailNow()
 		}
 
 		if !bytes.Equal(decrypted, m) {
-			fmt.Println("equal")
 			b.FailNow()
 		}
 
@@ -225,6 +215,27 @@ func BenchmarkByteCrypt(b *testing.B) {
 		}
 
 		dec, err := Decrypt(testKey, enc)
+		if err != nil {
+			b.FailNow()
+		}
+
+		if !bytes.Equal(msg, dec) {
+			b.FailNow()
+		}
+	}
+}
+
+// Benchmark encrypting and decrypting to bytes.
+func BenchmarkByteUnauthCrypt(b *testing.B) {
+	msg := []byte("Hello, world. Hallo, welt. Hej, världen.")
+
+	for i := 0; i < b.N; i++ {
+		enc, err := encrypt(testKey, msg)
+		if err != nil {
+			b.FailNow()
+		}
+
+		dec, err := decrypt(testKey, enc)
 		if err != nil {
 			b.FailNow()
 		}
