@@ -1,3 +1,4 @@
+// pkc provides an example of how to use RSA cryptography.
 package pkc
 
 import (
