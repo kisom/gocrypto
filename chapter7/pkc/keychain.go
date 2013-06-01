@@ -21,6 +21,8 @@ type KeyChain struct {
 
 var ErrInvalidKeyChain = fmt.Errorf("invalid keychain")
 
+// NewKeyChain sets up a new keychain based on the RSA private key passed
+// in. It ensures the returned keychain is valid.
 func NewKeyChain(prv *rsa.PrivateKey) (kc *KeyChain, err error) {
 	if err = prv.Validate(); err != nil {
 		return
@@ -31,6 +33,8 @@ func NewKeyChain(prv *rsa.PrivateKey) (kc *KeyChain, err error) {
 	return
 }
 
+// ImportKeyChain imports a keychain from a PEM file, and ensures the
+// returned KeyChain is valid.
 func ImportKeyChain(filename string) (kc *KeyChain, err error) {
 	var keychain KeyChain
 	pubs := make([]*PubKey, 0)
@@ -77,6 +81,8 @@ func ImportKeyChain(filename string) (kc *KeyChain, err error) {
 	return
 }
 
+// AddPublic adds a public key to the keychain, and adds the string identifier
+// to the structure.
 func (kc *KeyChain) AddPublic(id string, pub *rsa.PublicKey) {
 	if pub == nil {
 		return
@@ -90,6 +96,8 @@ func (kc *KeyChain) AddPublic(id string, pub *rsa.PublicKey) {
 	kc.Public = append(kc.Public, &PubKey{id, pub})
 }
 
+// GetPublic returns the public key associated with the identifier, or nil
+// if no matching key was found.
 func (kc *KeyChain) GetPublic(id string) (pub *rsa.PublicKey) {
 	for _, pk := range kc.Public {
 		if pk.Id == id {
@@ -100,6 +108,8 @@ func (kc *KeyChain) GetPublic(id string) (pub *rsa.PublicKey) {
 	return
 }
 
+// RemovePublic removes the public key associated with the ID from the
+// keychain.
 func (kc *KeyChain) RemovePublic(id string) bool {
 	for i, pk := range kc.Public {
 		if pk.Id == id {
@@ -110,6 +120,7 @@ func (kc *KeyChain) RemovePublic(id string) bool {
 	return false
 }
 
+// Validate ensures the keychain is valid.
 func (kc *KeyChain) Validate() bool {
 	if kc == nil {
 		return false
@@ -123,6 +134,7 @@ func (kc *KeyChain) Validate() bool {
 	return true
 }
 
+// Export writes the keychain to a file in PEM format.
 func (kc *KeyChain) Export(filename string) (err error) {
 	if !kc.Validate() {
 		return ErrInvalidKeyChain
