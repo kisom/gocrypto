@@ -67,15 +67,9 @@ func GenerateIV() (iv []byte, err error) {
 func PadBuffer(m []byte) (p []byte, err error) {
 	mLen := len(m)
 
-	p = make([]byte, mLen)
-	copy(p, m)
-
-	if len(p) != mLen {
-		return p, ErrPadding
-	}
-
-	padding := aes.BlockSize - mLen%aes.BlockSize
-
+        padding := aes.BlockSize - mLen%aes.BlockSize
+        p = make([]byte, mLen, aes.BlockSize*(mLen+padding))
+        copy(p, m)
 	p = append(p, 0x80)
 	for i := 1; i < padding; i++ {
 		p = append(p, 0x0)
