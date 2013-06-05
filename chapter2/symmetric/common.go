@@ -68,7 +68,7 @@ func PadBuffer(m []byte) (p []byte, err error) {
 	mLen := len(m)
 
         padding := aes.BlockSize - mLen%aes.BlockSize
-        p = make([]byte, mLen, aes.BlockSize*(mLen+padding))
+        p = make([]byte, mLen,mLen+padding)
         copy(p, m)
 	p = append(p, 0x80)
 	for i := 1; i < padding; i++ {
