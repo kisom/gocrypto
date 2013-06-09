@@ -53,6 +53,20 @@ func TestVerify(t *testing.T) {
 	}
 }
 
+func BenchmarkSignature(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		sig, err := Sign(testkey, testmsg)
+		if err != nil {
+			fmt.Println(err.Error())
+			b.FailNow()
+		}
+		if err = Verify(&testkey.PublicKey, testmsg, sig); err != nil {
+			fmt.Println(err.Error())
+			b.FailNow()
+		}
+	}
+}
+
 func TestExportPrivateKey(t *testing.T) {
 	certFile := tempFileName()
 	if certFile == "" {

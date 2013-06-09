@@ -33,7 +33,21 @@ func TestSign(t *testing.T) {
 
 func TestVerify(t *testing.T) {
 	if !Verify(&testkey.PublicKey, testmsg, testsig) {
-		fmt.Println("ecdsa: signature verification failed")
+		fmt.Println("ecc: signature verification failed")
 		t.FailNow()
+	}
+}
+
+func BenchmarkSignature(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		sig, err := Sign(testkey, testmsg)
+		if err != nil {
+			fmt.Println(err.Error())
+			b.FailNow()
+		}
+		if !Verify(&testkey.PublicKey, testmsg, sig) {
+			fmt.Println("ecc: signature verification failed")
+			b.FailNow()
+		}
 	}
 }
