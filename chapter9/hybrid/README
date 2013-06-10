@@ -1,0 +1,22 @@
+hybrid crypto system
+
+This is an example of a hybrid cryptosystem. It uses RSA to encrypt a set of
+ephemeral symmetric encryption keys, and transmits the resulting ciphertext
+along with the ciphertext resulting from an authenticated symmetric encryption
+of the message with AES-128 in CTR mode with an HMAC-SHA256 message tag. The
+receiver decrypts the ephemeral keys and verifies the sender's signature of the
+keys. This ensures that the sender is allowed to communicate with the host. If
+this is successful, the reciever then decrypts the symmetric ciphertext and
+validates the HMAC.
+
+The use of ephemeral keys ensures that, in the event the symmetric keys
+are compromised, they do not jeopardize future communications.
+
+For more information, see the chapter on hybrid cryptosystems. The primary
+purpose of this README is to provide a test message that is longer than
+the supported RSA message length to demonstrate how we can leverage the
+advantages of both symmetric and public-key cryptography.
+
+Example keys for the sender (testdata/1.key) and the receiver
+(testdata/2.key) are provided to avoid the extra time spent generating
+RSA keys.
