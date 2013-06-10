@@ -18,7 +18,7 @@ type Message struct {
 	Msg []byte
 }
 
-func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
+func generateSessionKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
 	var sym, mac []byte
 	if sym, err = Random(SymKeyLen); err != nil {
 		return
@@ -29,6 +29,8 @@ func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
 	key = make([]byte, SymKeyLen+MacKeyLen)
 	copy(key, sym)
 	copy(key[SymKeyLen:], mac)
+	scrub(mac, 3)
+	scrub(sym, 3)
 	sig, err = pks.Sign(prv, key)
 	return
 }
@@ -36,7 +38,7 @@ func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
 func Encrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, m []byte) (ct []byte, err error) {
 	var msg Message
 	var key []byte
-	if key, msg.Sig, err = generateEphemeralKeys(prv); err != nil {
+	if key, msg.Sig, err = generateSessionKeys(prv); err != nil {
 		return
 	}
 
@@ -50,8 +52,11 @@ func Encrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, m []byte) (ct []byte, err 
 	return
 }
 
-func readEphemeralKeys(prv *rsa.PrivateKey, pub *rsa.PublicKey, key, sig []byte) (sym, mac []byte, err error) {
+func readSessionKeys(prv *rsa.PrivateKey, pub *rsa.PublicKey, key, sig []byte) (sym, mac []byte, err error) {
 	if key, err = pkc.Decrypt(prv, key); err != nil {
+		return
+	} else if len(key) != SymKeyLen+MacKeyLen {
+		err = ErrInvalidKey
 		return
 	}
 
@@ -71,8 +76,7 @@ func Decrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, ct []byte) (m []byte, err 
 		return
 	}
 
-	var sym, mac []byte
-	sym, mac, err = readEphemeralKeys(prv, pub, msg.Key, msg.Sig)
+	sym, mac, err := readSessionKeys(prv, pub, msg.Key, msg.Sig)
 	if err != nil {
 		return
 	}

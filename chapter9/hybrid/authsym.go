@@ -11,7 +11,12 @@ import (
 	"io"
 )
 
-const HashLen = sha256.Size
+const (
+	HashLen   = sha256.Size
+	BlockSize = aes.BlockSize
+)
+
+var ErrInvalidKey = fmt.Errorf("hybrid: invalid key")
 
 func Hmac(key, in []byte) (hash []byte, err error) {
 	h := hmac.New(sha256.New, key)
