@@ -19,7 +19,7 @@ type Message struct {
 }
 
 func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
-        var sym, mac []byte
+	var sym, mac []byte
 	if sym, err = Random(SymKeyLen); err != nil {
 		return
 	} else if mac, err = Random(MacKeyLen); err != nil {
