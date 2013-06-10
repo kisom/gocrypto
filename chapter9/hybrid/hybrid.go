@@ -12,29 +12,24 @@ const (
 	MacKeyLen = 32 // HMAC-SHA256 key size
 )
 
-type KeyExchange struct {
-	Sym []byte // Symmetric encryption key
-	Mac []byte // MAC key
-}
-
 type Message struct {
 	Key []byte
 	Sig []byte
 	Msg []byte
 }
 
-func generateEphemeralKeys(prv *rsa.PrivateKey) (kex KeyExchange, sig []byte, err error) {
-	if kex.Sym, err = Random(SymKeyLen); err != nil {
+func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
+        var sym, mac []byte
+	if sym, err = Random(SymKeyLen); err != nil {
 		return
 	} else if kex.Mac, err = Random(MacKeyLen); err != nil {
 		return
 	}
 
-	var key = make([]byte, SymKeyLen+MacKeyLen)
-	copy(key, kex.Sym)
-	copy(key[SymKeyLen:], kex.Mac)
+	key = make([]byte, SymKeyLen+MacKeyLen)
+	copy(key, sym)
+	copy(key[SymKeyLen:], mac)
 	sig, err = pks.Sign(prv, key)
-	scrub(key, 3)
 	return
 }
 
@@ -66,20 +61,14 @@ func readEphemeralKeys(prv *rsa.PrivateKey, pub *rsa.PublicKey, key, sig []byte)
 	var kex KeyExchange
 	if key, err = pkc.Decrypt(prv, key); err != nil {
 		return
-	} else if _, err = asn1.Unmarshal(key, &kex); err != nil {
-		return
 	}
-
-	key = make([]byte, SymKeyLen+MacKeyLen)
-	copy(key, kex.Sym)
-	copy(key[SymKeyLen:], kex.Mac)
 
 	err = pks.Verify(pub, key, sig)
 	scrub(key, 3)
 	if err != nil {
 		return
 	}
-	return kex.Sym, kex.Mac, nil
+	return key[:SymKeyLen], key[SymKeyLen:], nil
 }
 
 func Decrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, ct []byte) (m []byte, err error) {
