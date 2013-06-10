@@ -22,7 +22,7 @@ func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
         var sym, mac []byte
 	if sym, err = Random(SymKeyLen); err != nil {
 		return
-	} else if kex.Mac, err = Random(MacKeyLen); err != nil {
+	} else if mac, err = Random(MacKeyLen); err != nil {
 		return
 	}
 
@@ -35,40 +35,33 @@ func generateEphemeralKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
 
 func Encrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, m []byte) (ct []byte, err error) {
 	var msg Message
-	var kex KeyExchange
-	if kex, msg.Sig, err = generateEphemeralKeys(prv); err != nil {
+	var key []byte
+	if key, msg.Sig, err = generateEphemeralKeys(prv); err != nil {
 		return
 	}
 
-	var kexEncoded []byte
-	if kexEncoded, err = asn1.Marshal(kex); err != nil {
+	if msg.Key, err = pkc.Encrypt(pub, key); err != nil {
 		return
-	}
-
-	if msg.Key, err = pkc.Encrypt(pub, kexEncoded); err != nil {
-		return
-	} else if msg.Msg, err = symEncrypt(kex.Sym, kex.Mac, m); err != nil {
+	} else if msg.Msg, err = symEncrypt(key[:SymKeyLen], key[SymKeyLen:], m); err != nil {
 		return
 	}
 	ct, err = asn1.Marshal(msg)
-	scrub(kex.Sym, 3)
-	scrub(kex.Mac, 3)
-	scrub(kexEncoded, 3)
+	scrub(key, 3)
 	return
 }
 
 func readEphemeralKeys(prv *rsa.PrivateKey, pub *rsa.PublicKey, key, sig []byte) (sym, mac []byte, err error) {
-	var kex KeyExchange
 	if key, err = pkc.Decrypt(prv, key); err != nil {
 		return
 	}
 
 	err = pks.Verify(pub, key, sig)
-	scrub(key, 3)
 	if err != nil {
 		return
 	}
-	return key[:SymKeyLen], key[SymKeyLen:], nil
+	sym = key[:SymKeyLen]
+	mac = key[SymKeyLen:]
+	return
 }
 
 func Decrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, ct []byte) (m []byte, err error) {

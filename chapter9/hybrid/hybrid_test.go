@@ -5,6 +5,7 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"github.com/kisom/gocrypto/chapter7/pkc"
+	"io/ioutil"
 	"testing"
 )
 
