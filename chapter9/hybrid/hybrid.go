@@ -3,14 +3,14 @@ package hybrid
 import (
 	"crypto/rsa"
 	"encoding/asn1"
+	"fmt"
 	"github.com/kisom/gocrypto/chapter7/pkc"
 	"github.com/kisom/gocrypto/chapter8/pks"
+	"github.com/kisom/gocrypto/chapter9/authsym"
 )
 
-const (
-	SymKeyLen = 16 // AES-128 key size
-	MacKeyLen = 32 // HMAC-SHA256 key size
-)
+var ErrInvalidKey = fmt.Errorf("hybrid: invalid key")
+var SharedKeyLen = authsym.SymKeyLen + authsym.MacKeyLen
 
 type Message struct {
 	Key []byte
@@ -20,17 +20,17 @@ type Message struct {
 
 func generateSessionKeys(prv *rsa.PrivateKey) (key, sig []byte, err error) {
 	var sym, mac []byte
-	if sym, err = Random(SymKeyLen); err != nil {
+	if sym, err = authsym.GenerateAESKey(); err != nil {
 		return
-	} else if mac, err = Random(MacKeyLen); err != nil {
+	} else if mac, err = authsym.GenerateHMACKey(); err != nil {
 		return
 	}
 
-	key = make([]byte, SymKeyLen+MacKeyLen)
+	key = make([]byte, SharedKeyLen)
 	copy(key, sym)
-	copy(key[SymKeyLen:], mac)
-	scrub(mac, 3)
-	scrub(sym, 3)
+	copy(key[authsym.SymKeyLen:], mac)
+	authsym.Scrub(mac, 3)
+	authsym.Scrub(sym, 3)
 	sig, err = pks.Sign(prv, key)
 	return
 }
@@ -44,18 +44,18 @@ func Encrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, m []byte) (ct []byte, err 
 
 	if msg.Key, err = pkc.Encrypt(pub, key); err != nil {
 		return
-	} else if msg.Msg, err = symEncrypt(key[:SymKeyLen], key[SymKeyLen:], m); err != nil {
+	} else if msg.Msg, err = authsym.Encrypt(key[:authsym.SymKeyLen], key[authsym.SymKeyLen:], m); err != nil {
 		return
 	}
 	ct, err = asn1.Marshal(msg)
-	scrub(key, 3)
+	authsym.Scrub(key, 3)
 	return
 }
 
 func readSessionKeys(prv *rsa.PrivateKey, pub *rsa.PublicKey, key, sig []byte) (sym, mac []byte, err error) {
 	if key, err = pkc.Decrypt(prv, key); err != nil {
 		return
-	} else if len(key) != SymKeyLen+MacKeyLen {
+	} else if len(key) != authsym.SymKeyLen+authsym.MacKeyLen {
 		err = ErrInvalidKey
 		return
 	}
@@ -64,8 +64,8 @@ func readSessionKeys(prv *rsa.PrivateKey, pub *rsa.PublicKey, key, sig []byte) (
 	if err != nil {
 		return
 	}
-	sym = key[:SymKeyLen]
-	mac = key[SymKeyLen:]
+	sym = key[:authsym.SymKeyLen]
+	mac = key[authsym.SymKeyLen:]
 	return
 }
 
@@ -80,8 +80,8 @@ func Decrypt(prv *rsa.PrivateKey, pub *rsa.PublicKey, ct []byte) (m []byte, err 
 	if err != nil {
 		return
 	}
-	m, err = symDecrypt(sym, mac, msg.Msg)
-	scrub(sym, 3)
-	scrub(mac, 3)
+	m, err = authsym.Decrypt(sym, mac, msg.Msg)
+	authsym.Scrub(sym, 3)
+	authsym.Scrub(mac, 3)
 	return
 }

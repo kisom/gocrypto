@@ -34,7 +34,7 @@ func TestGenerateKeys(t *testing.T) {
 		t.FailNow()
 	}
 
-	if testMessage, err = ioutil.ReadFile("README"); err != nil {
+	if testMessage, err = ioutil.ReadFile("TEST.txt"); err != nil {
 		fmt.Println(err.Error())
 		t.FailNow()
 	}
