@@ -60,7 +60,7 @@ func TestDecrypt(t *testing.T) {
 	}
 }
 
-func BenchmarkEncryptDecrypt(b *testing.B) {
+func BenchmarkEncryption(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		ct, err := Encrypt(testSender, &testReceiver.PublicKey, testMessage)
 		if err != nil {
@@ -74,6 +74,15 @@ func BenchmarkEncryptDecrypt(b *testing.B) {
 			b.FailNow()
 		} else if !bytes.Equal(msg, testMessage) {
 			fmt.Println("hybrid: failed to decrypt message")
+			b.FailNow()
+		}
+	}
+}
+
+func BenchmarkKeyGeneration(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if _, err := pkc.GenerateKey(); err != nil {
+			fmt.Println(err.Error())
 			b.FailNow()
 		}
 	}

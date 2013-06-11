@@ -72,3 +72,12 @@ func BenchmarkEncryption(b *testing.B) {
 		}
 	}
 }
+
+func BenchmarkKeyGeneration(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		if _, err := dhkam.GenerateKey(rand.Reader); err != nil {
+			fmt.Println(err.Error())
+			b.FailNow()
+		}
+	}
+}
