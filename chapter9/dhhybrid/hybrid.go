@@ -9,7 +9,7 @@ import (
 var keyMaterialSize = authsym.SymKeyLen + authsym.MacKeyLen
 
 func Encrypt(prv *dhkam.PrivateKey, pub *dhkam.PublicKey, m []byte) (out []byte, err error) {
-	key, err := prv.GenerateSharedKey(rand.Reader, pub, keyMaterialSize)
+	key, err := prv.SharedKey(rand.Reader, pub, keyMaterialSize)
 	if err != nil {
 		return
 	}
@@ -19,7 +19,7 @@ func Encrypt(prv *dhkam.PrivateKey, pub *dhkam.PublicKey, m []byte) (out []byte,
 }
 
 func Decrypt(prv *dhkam.PrivateKey, pub *dhkam.PublicKey, m []byte) (out []byte, err error) {
-	key, err := prv.GenerateSharedKey(rand.Reader, pub, keyMaterialSize)
+	key, err := prv.SharedKey(rand.Reader, pub, keyMaterialSize)
 	if err != nil {
 		return
 	}
