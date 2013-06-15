@@ -56,15 +56,15 @@ func BenchmarkEncryption(b *testing.B) {
 		ct, err := Encrypt(&testReceiver.PublicKey, testmsg)
 		if err != nil {
 			fmt.Println(err.Error())
-			b.FailNow()
+			b.Fail()
 		}
 		pt, err := Decrypt(testReceiver, ct)
 		if err != nil {
 			fmt.Println(err.Error())
-			b.FailNow()
+			b.Fail()
 		} else if !bytes.Equal(pt, testmsg) {
 			fmt.Println("dhhybrid: key exchange failure")
-			b.FailNow()
+			b.Fail()
 		}
 	}
 }

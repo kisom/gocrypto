@@ -88,7 +88,7 @@ func (kc *KeyChain) AddPublic(id string, pub *rsa.PublicKey) {
 		return
 	}
 	for _, pk := range kc.Public {
-		if pk.Id == id {
+		if id != "" && pk.Id == id {
 			pk.Key = pub
 			return
 		}
@@ -180,6 +180,7 @@ func (kc *KeyChain) Export(filename string) (err error) {
 		if err != nil {
 			fail()
 		}
+		fmt.Println("wrote a public key")
 	}
 	err = ioutil.WriteFile(filename, buf.Bytes(), 0400)
 	buf.Reset()
