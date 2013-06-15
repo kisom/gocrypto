@@ -88,7 +88,7 @@ func (kc *KeyChain) AddPublic(id string, pub *rsa.PublicKey) {
 		return
 	}
 	for _, pk := range kc.Public {
-		if pk.Id == id {
+		if id != "" && pk.Id == id {
 			pk.Key = pub
 			return
 		}
