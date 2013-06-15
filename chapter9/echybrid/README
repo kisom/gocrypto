@@ -1,0 +1,10 @@
+hybrid crypto system
+
+This is an example of a hybrid cryptosystem. It uses elliptic curve keys
+to generate shared symmetric encryption and HMAC keys. It uses ephemeral
+keys for the sender, providing forward secrecy.
+
+For more information, see the chapter on hybrid cryptosystems (chapter 9 of
+Practical Cryptography with Go[1]).
+
+[1] https://gokyle.org/book/

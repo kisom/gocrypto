@@ -9,14 +9,11 @@ keys. This ensures that the sender is allowed to communicate with the host. If
 this is successful, the reciever then decrypts the symmetric ciphertext and
 validates the HMAC.
 
-The use of ephemeral keys ensures that, in the event the symmetric keys
-are compromised, they do not jeopardize future communications.
-
-For more information, see the chapter on hybrid cryptosystems. The primary
-purpose of this README is to provide a test message that is longer than
-the supported RSA message length to demonstrate how we can leverage the
-advantages of both symmetric and public-key cryptography.
-
 Example keys for the sender (testdata/1.key) and the receiver
 (testdata/2.key) are provided to avoid the extra time spent generating
 RSA keys.
+
+For more information, see the chapter on hybrid cryptosystems (chapter 9 of
+Practical Cryptography with Go[1]).
+
+[1] https://gokyle.org/book/
