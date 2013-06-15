@@ -3,6 +3,7 @@ package dhhybrid
 import (
 	"bytes"
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"github.com/gokyle/dhkam"
 	"io/ioutil"
@@ -31,14 +32,14 @@ func TestGenerateKeys(t *testing.T) {
 	}
 
 	testSenderKEK = testSender.InitializeKEK(rand.Reader,
-	    &testReceiver.PublicKey, dhkam.AES128CBC, keyMaterialSize, nil)
+		&testReceiver.PublicKey, dhkam.KEKAES128CBCHMACSHA256, nil, sha256.New())
 	if testSenderKEK == nil {
 		fmt.Println(ErrInvalidKEKParams.Error())
 		t.FailNow()
 	}
 
 	testReceiverKEK = testReceiver.InitializeKEK(rand.Reader,
-		&testSender.PublicKey, dhkam.AES128CBC, keyMaterialSize, nil)
+		&testSender.PublicKey, dhkam.KEKAES128CBCHMACSHA256, nil, sha256.New())
 	if testReceiverKEK == nil {
 		fmt.Println(ErrInvalidKEKParams.Error())
 		t.FailNow()

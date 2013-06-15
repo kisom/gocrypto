@@ -1,7 +1,6 @@
 package dhhybrid
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"github.com/gokyle/dhkam"
 	"github.com/kisom/gocrypto/chapter9/authsym"
@@ -11,8 +10,7 @@ var keyMaterialSize = authsym.SymKeyLen + authsym.MacKeyLen
 var ErrInvalidKEKParams = fmt.Errorf("invalid KEK parameters")
 
 func Encrypt(prv *dhkam.PrivateKey, kek *dhkam.KEK, pub *dhkam.PublicKey, m []byte) (out []byte, err error) {
-	h := sha256.New()
-	key, err := prv.CEK(kek, h)
+	key, err := prv.CEK(kek)
 	if err != nil {
 		return
 	}
@@ -21,8 +19,7 @@ func Encrypt(prv *dhkam.PrivateKey, kek *dhkam.KEK, pub *dhkam.PublicKey, m []by
 }
 
 func Decrypt(prv *dhkam.PrivateKey, kek *dhkam.KEK, pub *dhkam.PublicKey, m []byte) (out []byte, err error) {
-	h := sha256.New()
-	key, err := prv.CEK(kek, h)
+	key, err := prv.CEK(kek)
 	if err != nil {
 		return
 	}
