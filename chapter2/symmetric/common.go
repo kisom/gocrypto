@@ -39,7 +39,7 @@ func Random(size int) (b []byte, err error) {
 	return
 }
 
-// GenerateKey returns a key suitable for AES-256 cryptography.
+// GenerateKey returns a key suitable for AES-128 cryptography.
 func GenerateKey() (key []byte, err error) {
 	return Random(KeySize)
 }

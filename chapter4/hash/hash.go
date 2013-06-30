@@ -2,7 +2,7 @@ package hash
 
 import (
 	"bytes"
-	"crypto/sha512"
+	"crypto/sha256"
 	"fmt"
 	"io"
 )
@@ -10,21 +10,21 @@ import (
 type Digest []byte
 
 var (
-	HashAlgo = sha512.New
-	HashLen  = 64
+	HashAlgo = sha256.New
+	HashLen  = 32
 )
 
 const ReadSize = 4096
 
 // New computes a new digest computed from the byte slice passed in with the
-// algorithm specified by sha3.
+// algorithm specified by SHA-256.
 func New(buf []byte) Digest {
 	c := HashAlgo()
 	c.Write(buf)
 	return c.Sum(nil)
 }
 
-// Read computes a new SHA-512 digest from the reader passed in.
+// Read computes a new SHA-256 digest from the reader passed in.
 func Read(r io.Reader) (h Digest, err error) {
 	c := HashAlgo()
 
@@ -46,17 +46,17 @@ func Read(r io.Reader) (h Digest, err error) {
 	return
 }
 
-// The Digest method returns the binary SHA-512 digest.
+// The Digest method returns the binary SHA-256 digest.
 func (h Digest) Digest() []byte {
 	return h
 }
 
-// The HexDigest method returns a hexadecimal version of the SHA-512 digest.
+// The HexDigest method returns a hexadecimal version of the SHA-256 digest.
 func (h Digest) HexDigest() []byte {
 	return []byte(fmt.Sprintf("%x", h))
 }
 
-// Verify compares the SHA-512 digest to the SHA-512 digest computed from the
+// Verify compares the SHA-256 digest to the SHA-256 digest computed from the
 // byte slice passed in.
 func (h Digest) Verify(buf []byte) bool {
 	vHash := New(buf)
@@ -66,7 +66,7 @@ func (h Digest) Verify(buf []byte) bool {
 	return true
 }
 
-// VerifyRead compares the SHA-512 digest to the SHA-512 digest computer from
+// VerifyRead compares the SHA-256 digest to the SHA-256 digest computer from
 // byte slice passed in.
 func (h Digest) VerifyRead(r io.Reader) bool {
 	vHash, err := Read(r)

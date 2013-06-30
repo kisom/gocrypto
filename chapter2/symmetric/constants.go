@@ -8,7 +8,7 @@ import (
 )
 
 const BlockSize = aes.BlockSize
-const KeySize = 32
+const KeySize = 16
 
 var (
 	PaddingError           = fmt.Errorf("invalid padding")

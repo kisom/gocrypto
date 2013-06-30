@@ -42,15 +42,16 @@ func TestGenerateKeys(t *testing.T) {
 
 func TestEncrypt(t *testing.T) {
 	var err error
-	testct, err = Encrypt(testSender, &testReceiver.PublicKey, testMessage)
+	testct, err = Encrypt(&testReceiver.PublicKey, testMessage)
 	if err != nil {
 		fmt.Println(err.Error())
 		t.FailNow()
 	}
+	ioutil.WriteFile("testct.out", testct, 0644)
 }
 
 func TestDecrypt(t *testing.T) {
-	msg, err := Decrypt(testReceiver, &testSender.PublicKey, testct)
+	msg, err := Decrypt(testReceiver, testct)
 	if err != nil {
 		fmt.Println(err.Error())
 		t.FailNow()
@@ -62,13 +63,13 @@ func TestDecrypt(t *testing.T) {
 
 func BenchmarkEncryption(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		ct, err := Encrypt(testSender, &testReceiver.PublicKey, testMessage)
+		ct, err := Encrypt(&testReceiver.PublicKey, testMessage)
 		if err != nil {
 			fmt.Println(err.Error())
 			b.FailNow()
 		}
 
-		msg, err := Decrypt(testReceiver, &testSender.PublicKey, ct)
+		msg, err := Decrypt(testReceiver, ct)
 		if err != nil {
 			fmt.Println(err.Error())
 			b.FailNow()

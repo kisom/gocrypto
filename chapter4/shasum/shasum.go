@@ -52,13 +52,15 @@ func matchAlgo(a int) func() hash.Hash {
 	switch a {
 	case 1:
 		return crypto.SHA1.New
+	case 224:
+		return crypto.SHA256.New224
 	case 256:
 		return crypto.SHA256.New
 	case 512:
 		return crypto.SHA512.New
 	default:
 		fmt.Printf("[!] invalid algorithm. Valid algorithms ")
-		fmt.Printf(" are 1, 256, and 512")
+		fmt.Printf(" are 1, 224, 256, 384, and 512")
 		os.Exit(1)
 	}
 	panic("not reached")

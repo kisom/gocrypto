@@ -9,13 +9,13 @@ import (
 
 var (
 	helloTestVector = []byte("Hello, world.")
-	helloBinDigest  = []byte{173, 12, 55, 195, 29, 105, 179, 21,
-		243, 168, 31, 19, 200, 205, 231, 1, 9, 74, 217, 23, 37,
-		186, 27, 13, 195, 25, 156, 169, 113, 54, 97, 184, 40,
-		13, 110, 247, 230, 143, 19, 62, 98, 17, 226, 229, 169,
-		163, 21, 4, 69, 215, 111, 23, 8, 224, 69, 33, 176, 238,
-		3, 79, 11, 11, 175, 38}
-	helloHexDigest = "ad0c37c31d69b315f3a81f13c8cde701094ad91725ba1b0dc3199ca9713661b8280d6ef7e68f133e6211e2e5a9a3150445d76f1708e04521b0ee034f0b0baf26"
+	helloBinDigest  = []byte{
+		0xf8, 0xc3, 0xbf, 0x62, 0xa9, 0xaa, 0x3e, 0x6f, 
+		0xc1, 0x61, 0x9c, 0x25, 0x0e, 0x48, 0xab, 0xe7, 
+		0x51, 0x93, 0x73, 0xd3, 0xed, 0xf4, 0x1b, 0xe6, 
+		0x2e, 0xb5, 0xdc, 0x45, 0x19, 0x9a, 0xf2, 0xef, 
+	}
+	helloHexDigest = "f8c3bf62a9aa3e6fc1619c250e48abe7519373d3edf41be62eb5dc45199af2ef"
 )
 
 func GenFailer(name string, err error, t *testing.T) func(string) {

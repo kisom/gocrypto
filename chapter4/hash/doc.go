@@ -2,7 +2,7 @@
    The hash package provides a wrapper around the Go hash
    packages.  Specifically, it extends the package to provide
    verification of digests. The default hash algorithm used is
-   SHA-512, but provisions are made to support other algorithms.
+   SHA-256, but provisions are made to support other algorithms.
 
    Two functions are provided for computing hashes: New computes the digest
    of a byte slice, and Read computes the digest of an io.Reader. The

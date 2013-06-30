@@ -64,7 +64,7 @@ func EncryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	cryptBlock, err = PadBuffer(cryptBlock)
 	if err != nil {
 		return
-	} else if (len(cryptBlock) % BlockSize) != 0 {
+	} else if len(cryptBlock) != BlockSize {
 		err = BlockSizeMismatchError
 		return
 	}
@@ -86,11 +86,8 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	}
 
 	iv := make([]byte, BlockSize)
-	n, err := r.Read(iv)
+	_, err = io.ReadFull(r, iv)
 	if err != nil {
-		return
-	} else if n != BlockSize {
-		err = IVSizeMismatchError
 		return
 	}
 
@@ -100,6 +97,7 @@ func DecryptReader(key []byte, r io.Reader, w io.Writer) (err error) {
 	// and EOF conditions.
 	cryptBlock := make([]byte, 0)
 
+	var n int
 	for {
 		if len(cryptBlock) == BlockSize {
 			cbc.CryptBlocks(cryptBlock, cryptBlock)
