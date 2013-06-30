@@ -55,11 +55,21 @@ func TestVerify(t *testing.T) {
 
 func BenchmarkSignature(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		sig, err := Sign(testkey, testmsg)
+		_, err := Sign(testkey, testmsg)
 		if err != nil {
 			fmt.Println(err.Error())
 			b.FailNow()
 		}
+	}
+}
+
+func BenchmarkVerify(b *testing.B) {
+	sig, err := Sign(testkey, testmsg)
+	if err != nil {
+		fmt.Println(err.Error())
+		b.FailNow()
+	}
+	for i := 0; i < b.N; i++ {
 		if err = Verify(&testkey.PublicKey, testmsg, sig); err != nil {
 			fmt.Println(err.Error())
 			b.FailNow()
