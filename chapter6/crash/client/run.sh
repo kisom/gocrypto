@@ -7,5 +7,5 @@ fi
 
 for i in $(seq 1 100)
 do
-        go run client.go -p "${PASSWORD}" -a 127.0.0.1:4141
+        go run client.go -p "${PASSWORD}" 
 done
