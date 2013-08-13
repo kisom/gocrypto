@@ -1,10 +1,9 @@
 package main
 
 import (
-	"crypto"
-	_ "crypto/sha1"
-	_ "crypto/sha256"
-	_ "crypto/sha512"
+	"crypto/sha1"
+	"crypto/sha256"
+	"crypto/sha512"
 	"flag"
 	"fmt"
 	"hash"
@@ -51,13 +50,15 @@ func HashReader(r io.Reader, algo func() hash.Hash) (h Digest, err error) {
 func matchAlgo(a int) func() hash.Hash {
 	switch a {
 	case 1:
-		return crypto.SHA1.New
+		return sha1.New
 	case 224:
-		return crypto.SHA256.New224
+		return sha256.New224
 	case 256:
-		return crypto.SHA256.New
+		return sha256.New
+	case 384:
+		return sha512.New384
 	case 512:
-		return crypto.SHA512.New
+		return sha512.New
 	default:
 		fmt.Printf("[!] invalid algorithm. Valid algorithms ")
 		fmt.Printf(" are 1, 224, 256, 384, and 512")
