@@ -24,7 +24,7 @@ func GenerateRSAKey() (key *rsa.PrivateKey, err error) {
 }
 
 func RSAEncrypt(pub *rsa.PublicKey, pt []byte) (ct []byte, err error) {
-	if len(ct) > MaxMessageLength(pub) {
+	if len(pt) > MaxMessageLength(pub) {
 		err = fmt.Errorf("message is too long")
 		return
 	}

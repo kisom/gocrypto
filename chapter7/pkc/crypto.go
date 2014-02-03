@@ -34,7 +34,7 @@ func GenerateKey() (key *rsa.PrivateKey, err error) {
 // not longer than the maximum allowed message length. It uses SHA256
 // as the underlying hash algorithm.
 func Encrypt(pub *rsa.PublicKey, pt []byte) (ct []byte, err error) {
-	if len(ct) > MaxMessageLength(pub) {
+	if len(pt) > MaxMessageLength(pub) {
 		err = fmt.Errorf("message is too long")
 		return
 	}
