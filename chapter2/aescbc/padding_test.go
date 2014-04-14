@@ -2,6 +2,7 @@ package aescbc
 
 import (
 	"bytes"
+	"crypto/aes"
 	"testing"
 )
 
@@ -100,9 +101,16 @@ func TestUnpad(t *testing.T) {
 	}
 }
 
-func BadUnpad(t *testing.T) {
-	padded := []byte{0x42}
+func TestBadUnpad(t *testing.T) {
+	padded := []byte{0xa}
 	p := Unpad(padded)
+	if p != nil {
+		t.Fatal("Unpadding should fail.")
+	}
+
+	padded = make([]byte, aes.BlockSize+2)
+	padded[aes.BlockSize+1] = 0x11
+	p = Unpad(padded)
 	if p != nil {
 		t.Fatal("Unpadding should fail.")
 	}

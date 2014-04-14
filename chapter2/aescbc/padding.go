@@ -1,5 +1,7 @@
 package aescbc
 
+import "crypto/aes"
+
 // Pad applies the PKCS #7 padding scheme on the buffer.
 func Pad(in []byte) []byte {
 	padding := 16 - (len(in) % 16)
@@ -15,10 +17,15 @@ func Pad(in []byte) []byte {
 // Unpad strips the PKCS #7 padding on a buffer. If the padding is
 // invalid, nil is returned.
 func Unpad(in []byte) []byte {
-	padding := in[len(in)-1]
-	if int(padding) > len(in) {
+	if len(in) == 0 {
 		return nil
 	}
+
+	padding := in[len(in)-1]
+	if int(padding) > len(in) || padding > aes.BlockSize {
+		return nil
+	}
+
 	for i := len(in) - 1; i > len(in)-int(padding); i-- {
 		if in[i] != padding {
 			return nil
