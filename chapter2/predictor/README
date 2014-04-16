@@ -1,0 +1,13 @@
+challenger is a challenger in the IND-CPA game with a predictable IV
+generator. It runs an HTTP server, listening on port 8080, and accepts
+queries on one of two endpoints:
+
+	- /query takes a JSON structure with two elements ("m1" and "m2")
+	  that contains the two messages for the challenger to encrypt.
+	  The challenger will choose a single message and return the
+	  hex-encoded version back to the attacker.
+	- /choose takes a JSON structure with a single element ("first"),
+	  which contains a boolean that is true if the last ciphertext
+	  returned is for the first message. The challenger will return
+	  "1" if this is correct, or "0" if not.
+
