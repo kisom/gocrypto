@@ -5,10 +5,9 @@ import (
 	"bytes"
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
-	"errors"
 	"flag"
 	"fmt"
-	"github.com/kisom/gocrypto/chapter2/secretbox"
+	"github.com/kisom/gocrypto/chapter2/salsa20"
 	"io"
 	"log"
 	"net"
@@ -28,7 +27,7 @@ const (
 var config struct {
 	User string
 	Port string
-	Key  *[secretbox.KeySize]byte
+	Key  *[salsa20.KeySize]byte
 }
 
 var (
@@ -234,8 +233,8 @@ func DecodeMessage(msg []byte) (msgStr string, err error) {
 	}
 
 	if M.Encryption {
-		if !M.Control && len(config.Key) > 0 {
-			tmp, ok := secretbox.Decrypt(config.Key, M.Text)
+		if !M.Control && config.Key != nil {
+			tmp, ok := salsa20.Decrypt(config.Key, M.Text)
 			if ok {
 				M.Text = tmp
 			} else {
@@ -265,11 +264,7 @@ func EncodeMessage(msg []byte, control bool) (wire []byte, err error) {
 	msg = bytes.TrimSpace(msg)
 	M := new(Message)
 	if !control && config.Key != nil {
-		var ok bool
-		msg, ok = secretbox.Encrypt(config.Key, msg)
-		if !ok {
-			return nil, errors.New("encrypt failed")
-		}
+		msg = salsa20.Encrypt(config.Key, msg)
 		M.Encryption = true
 	}
 	M.Sender = config.User
@@ -280,8 +275,8 @@ func EncodeMessage(msg []byte, control bool) (wire []byte, err error) {
 }
 
 // Read a key from a file
-func ReadKeyFromFile(filename string) (*[secretbox.KeySize]byte, error) {
-	var key [secretbox.KeySize]byte
+func ReadKeyFromFile(filename string) (*[salsa20.KeySize]byte, error) {
+	var key [salsa20.KeySize]byte
 	keyFile, err := os.Open(filename)
 	if err != nil {
 		return nil, err
