@@ -63,7 +63,7 @@ func checkMessage(w http.ResponseWriter, r *http.Request) {
 	if bytes.Equal(body, Message) {
 		w.Write([]byte("You win!"))
 	} else {
-		w.Write([]byte("Try again"))
+		http.Error(w, "Try again.", http.StatusBadRequest)
 	}
 }
 

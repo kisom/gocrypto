@@ -102,11 +102,11 @@ func Unpad(in []byte) []byte {
 	}
 
 	padding := in[len(in)-1]
-	if int(padding) > len(in) || padding > aes.BlockSize {
+	if int(padding) > len(in) || padding > aes.BlockSize || padding == 0 {
 		return nil
 	}
 
-	for i := len(in) - 1; i > len(in)-int(padding); i-- {
+	for i := len(in) - 1; i > len(in)-int(padding)-1; i-- {
 		if in[i] != padding {
 			return nil
 		}
