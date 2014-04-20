@@ -25,7 +25,6 @@ func main() {
 	if Key == nil {
 		log.Fatal("failed to generate key")
 	}
-	log.Printf("%s", string(Message))
 
 	var err error
 	Ciphertext, err = Encrypt(Key, Message)
@@ -44,8 +43,8 @@ func sendCiphertext(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "bad method", http.StatusMethodNotAllowed)
 		return
 	}
-	out := make([]byte, hex.EncodedLen(len(Message)))
-	hex.Encode(out, Message)
+	out := make([]byte, hex.EncodedLen(len(Ciphertext)))
+	hex.Encode(out, Ciphertext)
 	w.Write(out)
 }
 
@@ -80,10 +79,10 @@ func decrypt(w http.ResponseWriter, r *http.Request) {
 	}
 	r.Body.Close()
 
-	pt, err := Decrypt(Key, body)
+	_, err = Decrypt(Key, body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	w.Write(pt)
+	w.Write([]byte("OK"))
 }
