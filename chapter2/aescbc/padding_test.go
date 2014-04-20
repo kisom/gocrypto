@@ -114,4 +114,18 @@ func TestBadUnpad(t *testing.T) {
 	if p != nil {
 		t.Fatal("Unpadding should fail.")
 	}
+
+	padded = make([]byte, 14)
+	padded = append(padded, 3)
+	padded = append(padded, 3)
+	p = Unpad(padded)
+	if p != nil {
+		t.Fatal("Unpadding should fail.")
+	}
+
+	padded = make([]byte, 16)
+	p = Unpad(padded)
+	if p != nil {
+		t.Fatal("Unpadding should fail.")
+	}
 }
