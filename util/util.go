@@ -1,0 +1,17 @@
+package util
+
+import (
+	"crypto/rand"
+	"io"
+)
+
+// RandBytes attempts to read the selected number of bytes from the
+// operating system PRNG.
+func RandBytes(n int) ([]byte, error) {
+	r := make([]byte, n)
+	_, err := io.ReadFull(rand.Reader, r)
+	if err != nil {
+		return nil, err
+	}
+	return r, nil
+}
