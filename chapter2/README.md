@@ -10,3 +10,5 @@ The packages here:
 * nacl
 * aesgcm
 
+This also includes an example of using additional data with an AEAD in
+the `aesgcmad` package.
