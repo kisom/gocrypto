@@ -34,3 +34,59 @@ func GenerateKey() ([]byte, error) {
 func GenerateNonce() ([]byte, error) {
 	return util.RandBytes(NonceSize)
 }
+
+// Encrypt secures a message using AES-CTR-HMAC-SHA384 with a random
+// nonce.
+func Encrypt(key, message []byte) ([]byte, error) {
+	if len(key) != KeySize {
+		return nil, ErrEncrypt
+	}
+
+	nonce, err := util.RandBytes(NonceSize)
+	if err != nil {
+		return nil, ErrEncrypt
+	}
+
+	ct := make([]byte, len(message))
+
+	// NewCipher only returns an error with an invalid key size,
+	// but the key size was checked at the beginning of the function.
+	c, _ := aes.NewCipher(key[:CKeySize])
+	ctr := cipher.NewCTR(c, nonce)
+	ctr.XORKeyStream(ct, message)
+
+	h := hmac.New(sha512.New384, key[CKeySize:])
+	ct = append(nonce, ct...)
+	h.Write(ct)
+	ct = h.Sum(ct)
+	return ct, nil
+}
+
+// Decrypt recovers a message using AES-CTR-HMAC-SHA384 where the nonce
+// is prepended.
+func Decrypt(key, message []byte) ([]byte, error) {
+	if len(key) != KeySize {
+		return nil, ErrDecrypt
+	}
+
+	if len(message) <= (NonceSize + MACSize) {
+		return nil, ErrDecrypt
+	}
+
+	macStart := len(message) - MACSize
+	tag := message[macStart:]
+	out := make([]byte, macStart-NonceSize)
+	message = message[:macStart]
+
+	h := hmac.New(sha512.New384, key[CKeySize:])
+	h.Write(message)
+	mac := h.Sum(nil)
+	if !hmac.Equal(mac, tag) {
+		return nil, ErrDecrypt
+	}
+
+	c, _ := aes.NewCipher(key[:CKeySize])
+	ctr := cipher.NewCTR(c, message[:NonceSize])
+	ctr.XORKeyStream(out, message[NonceSize:])
+	return out, nil
+}
