@@ -15,3 +15,10 @@ func RandBytes(n int) ([]byte, error) {
 	}
 	return r, nil
 }
+
+// Zero attempts to zeroise a byte slice.
+func Zero(in []byte) {
+	for i := range in {
+		in[i] = 0
+	}
+}

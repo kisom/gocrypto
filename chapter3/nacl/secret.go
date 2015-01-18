@@ -10,9 +10,17 @@ import (
 	"code.google.com/p/go.crypto/nacl/secretbox"
 )
 
+const (
+	// KeySize is the size of a NaCl secret key.
+	KeySize = 32
+
+	// NonceSize is the size of a NaCl nonce.
+	NonceSize = 24
+)
+
 // GenerateKey creates a new random secret key.
-func GenerateKey() (*[32]byte, error) {
-	key := new([32]byte)
+func GenerateKey() (*[KeySize]byte, error) {
+	key := new([KeySize]byte)
 	_, err := io.ReadFull(rand.Reader, key[:])
 	if err != nil {
 		return nil, err
@@ -22,8 +30,8 @@ func GenerateKey() (*[32]byte, error) {
 }
 
 // GenerateNonce creates a new random nonce.
-func GenerateNonce() (*[24]byte, error) {
-	nonce := new([24]byte)
+func GenerateNonce() (*[NonceSize]byte, error) {
+	nonce := new([NonceSize]byte)
 	_, err := io.ReadFull(rand.Reader, nonce[:])
 	if err != nil {
 		return nil, err
@@ -33,7 +41,10 @@ func GenerateNonce() (*[24]byte, error) {
 }
 
 var (
+	// ErrEncrypt is returned when encryption fails.
 	ErrEncrypt = errors.New("secret: encryption failed")
+
+	// ErrDecrypt is returned when decryption fails.
 	ErrDecrypt = errors.New("secret: decryption failed")
 )
 
@@ -41,7 +52,7 @@ var (
 // NaCl's secretbox package. The nonce is prepended to the ciphertext.
 // A sealed message will the same size as the original message plus
 // secretbox.Overhead bytes long.
-func Encrypt(key *[32]byte, message []byte) ([]byte, error) {
+func Encrypt(key *[KeySize]byte, message []byte) ([]byte, error) {
 	nonce, err := GenerateNonce()
 	if err != nil {
 		return nil, ErrEncrypt
@@ -55,14 +66,14 @@ func Encrypt(key *[32]byte, message []byte) ([]byte, error) {
 
 // Decrypt extracts the nonce from the ciphertext, and attempts to
 // decrypt with NaCl's secretbox.
-func Decrypt(key *[32]byte, message []byte) ([]byte, error) {
-	if len(message) < (24 + secretbox.Overhead) {
+func Decrypt(key *[KeySize]byte, message []byte) ([]byte, error) {
+	if len(message) < (NonceSize + secretbox.Overhead) {
 		return nil, ErrDecrypt
 	}
 
-	var nonce [24]byte
-	copy(nonce[:], message[:24])
-	out, ok := secretbox.Open(nil, message[24:], &nonce, key)
+	var nonce [NonceSize]byte
+	copy(nonce[:], message[:NonceSize])
+	out, ok := secretbox.Open(nil, message[NonceSize:], &nonce, key)
 	if !ok {
 		return nil, ErrDecrypt
 	}
