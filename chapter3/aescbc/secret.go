@@ -4,7 +4,7 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
-	"crypto/sha512"
+	"crypto/sha256"
 	"errors"
 
 	"git.metacircular.net/kyle/gocrypto/util"
@@ -12,9 +12,9 @@ import (
 
 const (
 	NonceSize = aes.BlockSize
-	MACSize   = 48
+	MACSize   = 32
 	CKeySize  = 32 // Cipher key size - AES-256
-	MKeySize  = 48 // HMAC key size - HMAC-SHA-384
+	MKeySize  = 32 // HMAC key size - HMAC-SHA-384
 )
 
 var KeySize = CKeySize + MKeySize
@@ -34,7 +34,7 @@ func GenerateNonce() ([]byte, error) {
 	return util.RandBytes(NonceSize)
 }
 
-// Encrypt secures a message using AES-CBC-HMAC-SHA384 with a random
+// Encrypt secures a message using AES-CBC-HMAC-SHA-256 with a random
 // nonce.
 func Encrypt(key, message []byte) ([]byte, error) {
 	if len(key) != KeySize {
@@ -55,17 +55,17 @@ func Encrypt(key, message []byte) ([]byte, error) {
 	ctr := cipher.NewCBCEncrypter(c, iv)
 	ctr.CryptBlocks(ct, pmessage)
 
-	h := hmac.New(sha512.New384, key[CKeySize:])
+	h := hmac.New(sha256.New, key[CKeySize:])
 	ct = append(iv, ct...)
 	h.Write(ct)
 	ct = h.Sum(ct)
 	return ct, nil
 }
 
-// Decrypt recovers a message using AES-CBC-HMAC-SHA384 with a random
+// Decrypt recovers a message using AES-CBC-HMAC-SHA-256 with a random
 // nonce.
 func Decrypt(key, message []byte) ([]byte, error) {
-	// HMAC-SHA-384 returns a MAC that is also a multiple of the
+	// HMAC-SHA-256 returns a MAC that is also a multiple of the
 	// block size.
 	if (len(message) % aes.BlockSize) != 0 {
 		return nil, ErrDecrypt
@@ -73,7 +73,7 @@ func Decrypt(key, message []byte) ([]byte, error) {
 
 	// A message must have at least an IV block, a message block,
 	// and three blocks of HMAC.
-	if len(message) < (5 * aes.BlockSize) {
+	if len(message) < (4 * aes.BlockSize) {
 		return nil, ErrDecrypt
 	}
 
@@ -82,7 +82,7 @@ func Decrypt(key, message []byte) ([]byte, error) {
 	out := make([]byte, macStart-NonceSize)
 	message = message[:macStart]
 
-	h := hmac.New(sha512.New384, key[CKeySize:])
+	h := hmac.New(sha256.New, key[CKeySize:])
 	h.Write(message)
 	mac := h.Sum(nil)
 	if !hmac.Equal(mac, tag) {
