@@ -80,6 +80,10 @@ func TestSessionSetup(t *testing.T) {
 		t.Fatal("recovered message doesn't match original")
 	}
 
+	if err = aliceSession.Send(nil); err == nil {
+		t.Fatal("empty message should trigger an error")
+	}
+
 	aliceSession.Close()
 	bobSession.Close()
 }

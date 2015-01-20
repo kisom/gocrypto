@@ -81,8 +81,12 @@ type Session struct {
 }
 
 // Encrypt adds a message number to the session and secures it with a
-// symmetric ciphersuite.
+// symmetric ciphersuite. The message cannot be empty.
 func (s *Session) Encrypt(message []byte) ([]byte, error) {
+	if len(message) == 0 {
+		return nil, secret.ErrEncrypt
+	}
+
 	s.LastSent++
 	m := MarshalMessage(Message{s.LastSent, message})
 	return secret.Encrypt(s.sendKey, m)
