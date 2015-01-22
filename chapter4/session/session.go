@@ -8,6 +8,10 @@
 // The first public key is used to encrypt traffic going from the dialer
 // to the listener, and the second is used to encrypt traffic from the
 // listener to the dialer.
+//
+// The key exchange isn't authenticated, but this isn't considered in
+// the scope of what this package provides. In a later chapter, the key
+// exchange will be authenticated via digital signatures.
 package session
 
 import (
@@ -27,17 +31,17 @@ type Channel io.ReadWriter
 // A message is considered as the pairing of a message number and some
 // message contents.
 type Message struct {
-	Number   uint64
+	Number   uint32
 	Contents []byte
 }
 
 // MarshalMessage serialises a message into a byte slice. Serialising
-// the message appends the contents to the 8-byte message number. The
-// out variable is initialised with only eight bytes, but with a capacity
+// the message appends the contents to the 4-byte message number. The
+// out variable is initialised with only four bytes, but with a capacity
 // that accounts for the message contents.
 func MarshalMessage(m Message) []byte {
-	out := make([]byte, 8, len(m.Contents)+8)
-	binary.BigEndian.PutUint64(out[:8], m.Number)
+	out := make([]byte, 4, len(m.Contents)+4)
+	binary.BigEndian.PutUint32(out[:4], m.Number)
 	return append(out, m.Contents...)
 }
 
@@ -47,30 +51,30 @@ func MarshalMessage(m Message) []byte {
 // number and contents are extracted.
 func UnmarshalMessage(in []byte) (Message, bool) {
 	m := Message{}
-	if len(in) <= 8 {
+	if len(in) <= 4 {
 		return m, false
 	}
 
-	m.Number = binary.BigEndian.Uint64(in[:8])
-	m.Contents = in[8:]
+	m.Number = binary.BigEndian.Uint32(in[:4])
+	m.Contents = in[4:]
 	return m, true
 }
 
 // A Session tracks message numbers for a session. Including message
 // numbers is only useful if they're being checked. We'll keep track of
-// message numbers for a given session
+// message numbers for a given session in both directions.
 type Session struct {
-	// LastSent keeps track of the message numbers for messages sent
+	// lastSent keeps track of the message numbers for messages sent
 	// from this session to the peer..
-	LastSent uint64
+	lastSent uint32
 
 	// sendKey is the key used to encrypt outgoing messages to
 	// the peer.
 	sendKey *[32]byte
 
-	// LastRecv tracks the message numbers for messages received by
+	// lastRecv tracks the message numbers for messages received by
 	// this session.
-	LastRecv uint64
+	lastRecv uint32
 
 	// recvKey contains the session key used to decrypt incoming
 	// messages from the peer.
@@ -80,6 +84,17 @@ type Session struct {
 	Channel Channel
 }
 
+// LastSent returns the message number of the last message to be sent
+// by this session.
+func (s *Session) LastSent() uint32 {
+	return s.lastSent
+}
+
+// LastRecv returns the message number of the last received message.
+func (s *Session) LastRecv() uint32 {
+	return s.lastRecv
+}
+
 // Encrypt adds a message number to the session and secures it with a
 // symmetric ciphersuite. The message cannot be empty.
 func (s *Session) Encrypt(message []byte) ([]byte, error) {
@@ -87,8 +102,8 @@ func (s *Session) Encrypt(message []byte) ([]byte, error) {
 		return nil, secret.ErrEncrypt
 	}
 
-	s.LastSent++
-	m := MarshalMessage(Message{s.LastSent, message})
+	s.lastSent++
+	m := MarshalMessage(Message{s.lastSent, message})
 	return secret.Encrypt(s.sendKey, m)
 }
 
@@ -122,11 +137,11 @@ func (s *Session) Decrypt(message []byte) ([]byte, error) {
 		return nil, secret.ErrDecrypt
 	}
 
-	if m.Number <= s.LastRecv {
+	if m.Number <= s.lastRecv {
 		return nil, secret.ErrDecrypt
 	}
 
-	s.LastRecv = m.Number
+	s.lastRecv = m.Number
 
 	return m.Contents, nil
 }
@@ -148,9 +163,11 @@ func (s *Session) Receive() ([]byte, error) {
 	return s.Decrypt(message)
 }
 
-func generateKeyPair() (*[64]byte, *[64]byte, error) {
-	pub := new([64]byte)
-	priv := new([64]byte)
+// GenerateKeyPair generates a new key pair. This can be used to get a
+// new key pair for setting up a rekeying operation during the session.
+func GenerateKeyPair() (pub *[64]byte, priv *[64]byte, err error) {
+	pub = new([64]byte)
+	priv = new([64]byte)
 
 	recvPub, recvPriv, err := box.GenerateKey(rand.Reader)
 	if err != nil {
@@ -168,7 +185,10 @@ func generateKeyPair() (*[64]byte, *[64]byte, error) {
 	return pub, priv, err
 }
 
-// Close zeroises the keys in the session.
+// Close zeroises the keys in the session. Once a session is closed,
+// the traffic that was sent over the channel can no longer be decrypted
+// and any attempts at sending or receiving messages over the channel
+// will fail.
 func (s *Session) Close() error {
 	util.Zero(s.sendKey[:])
 	util.Zero(s.recvKey[:])
@@ -195,7 +215,7 @@ func keyExchange(shared *[32]byte, priv, pub []byte) {
 // reading the peer's public keys back.
 func Dial(ch Channel) (*Session, error) {
 	var peer [64]byte
-	pub, priv, err := generateKeyPair()
+	pub, priv, err := GenerateKeyPair()
 	if err != nil {
 		return nil, err
 	}
@@ -217,16 +237,7 @@ func Dial(ch Channel) (*Session, error) {
 		Channel: ch,
 	}
 
-	// The first 32 bytes are the A->B link, where A is the
-	// dialer. This key material should be used to set up the
-	// A send key.
-	keyExchange(s.sendKey, priv[:32], peer[:32])
-
-	// The last 32 bytes are the B->A link, where A is the
-	// dialer. This key material should be used to set up the A
-	// receive key.
-	keyExchange(s.recvKey, priv[32:], peer[32:])
-
+	s.Rekey(priv, &peer, true)
 	return s, nil
 }
 
@@ -234,7 +245,7 @@ func Dial(ch Channel) (*Session, error) {
 // and session.
 func Listen(ch Channel) (*Session, error) {
 	var peer [64]byte
-	pub, priv, err := generateKeyPair()
+	pub, priv, err := GenerateKeyPair()
 	if err != nil {
 		return nil, err
 	}
@@ -256,15 +267,43 @@ func Listen(ch Channel) (*Session, error) {
 		Channel: ch,
 	}
 
-	// The first 32 bytes are the A->B link, where A is the
-	// dialer. This key material should be used to set up the
-	// B receive key.
-	keyExchange(s.recvKey, priv[:32], peer[:32])
-
-	// The last 32 bytes are the B->A link, where A is the
-	// dialer. This key material should be used to set up the
-	// B send key.
-	keyExchange(s.sendKey, priv[32:], peer[32:])
-
+	s.Rekey(priv, &peer, false)
 	return s, nil
+}
+
+// Rekey is used to perform the key exchange once both sides have
+// exchanged their public keys. The underlying message protocol will
+// need to actually initiate and carry out the key exchange, and call
+// this once that is finished. The private key will be zeroised after
+// calling this function. If the session is on the side that initiated
+// the key exchange (e.g. by calling Dial), it should set the dialer
+// argument to true. This will also reset the message counters for the
+// session, as it will cause the session to use a new key.
+func (s *Session) Rekey(priv, peer *[64]byte, dialer bool) {
+	// This function denotes the dialer, who initiates the session,
+	// as A. The listener is denoted as B. A is started using Dial,
+	// and B is started using Listen.
+	if dialer {
+		// The first 32 bytes are the A->B link, where A is the
+		// dialer. This key material should be used to set up the
+		// A send key.
+		keyExchange(s.sendKey, priv[:32], peer[:32])
+
+		// The last 32 bytes are the B->A link, where A is the
+		// dialer. This key material should be used to set up the A
+		// receive key.
+		keyExchange(s.recvKey, priv[32:], peer[32:])
+	} else {
+		// The first 32 bytes are the A->B link, where A is the
+		// dialer. This key material should be used to set up the
+		// B receive key.
+		keyExchange(s.recvKey, priv[:32], peer[:32])
+
+		// The last 32 bytes are the B->A link, where A is the
+		// dialer. This key material should be used to set up the
+		// B send key.
+		keyExchange(s.sendKey, priv[32:], peer[32:])
+	}
+	s.lastSent = 0
+	s.lastRecv = 0
 }

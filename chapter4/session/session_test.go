@@ -37,7 +37,7 @@ var (
 )
 
 func TestSessionSetup(t *testing.T) {
-	pub, priv, err := generateKeyPair()
+	pub, priv, err := GenerateKeyPair()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -62,9 +62,7 @@ func TestSessionSetup(t *testing.T) {
 		Channel: testio.NewBufCloser(nil),
 	}
 
-	keyExchange(bobSession.sendKey, priv[32:], peer[32:])
-	keyExchange(bobSession.recvKey, priv[:32], peer[:32])
-
+	bobSession.Rekey(priv, &peer, false)
 	aliceSession.Channel = bobSession.Channel
 	err = aliceSession.Send(testMessage)
 	if err != nil {
@@ -91,7 +89,7 @@ func TestSessionSetup(t *testing.T) {
 var oldMessage []byte
 
 func TestSessionListen(t *testing.T) {
-	pub, priv, err := generateKeyPair()
+	pub, priv, err := GenerateKeyPair()
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -116,8 +114,7 @@ func TestSessionListen(t *testing.T) {
 		Channel: testio.NewBufCloser(nil),
 	}
 
-	keyExchange(bobSession.recvKey, priv[32:], peer[32:])
-	keyExchange(bobSession.sendKey, priv[:32], peer[:32])
+	bobSession.Rekey(priv, &peer, true)
 
 	aliceSession.Channel = bobSession.Channel
 	err = aliceSession.Send(testMessage)
@@ -130,6 +127,7 @@ func TestSessionListen(t *testing.T) {
 		t.Fatalf("%v", err)
 	}
 
+	// The NBA is always listening, on and off the court.
 	oldMessage = out
 
 	if !bytes.Equal(out, testMessage) {
