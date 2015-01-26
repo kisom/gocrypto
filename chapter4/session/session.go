@@ -237,7 +237,7 @@ func Dial(ch Channel) (*Session, error) {
 		Channel: ch,
 	}
 
-	s.Rekey(priv, &peer, true)
+	s.KeyExchange(priv, &peer, true)
 	return s, nil
 }
 
@@ -267,7 +267,7 @@ func Listen(ch Channel) (*Session, error) {
 		Channel: ch,
 	}
 
-	s.Rekey(priv, &peer, false)
+	s.KeyExchange(priv, &peer, false)
 	return s, nil
 }
 
@@ -279,7 +279,7 @@ func Listen(ch Channel) (*Session, error) {
 // the key exchange (e.g. by calling Dial), it should set the dialer
 // argument to true. This will also reset the message counters for the
 // session, as it will cause the session to use a new key.
-func (s *Session) Rekey(priv, peer *[64]byte, dialer bool) {
+func (s *Session) KeyExchange(priv, peer *[64]byte, dialer bool) {
 	// This function denotes the dialer, who initiates the session,
 	// as A. The listener is denoted as B. A is started using Dial,
 	// and B is started using Listen.

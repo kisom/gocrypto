@@ -62,7 +62,7 @@ func TestSessionSetup(t *testing.T) {
 		Channel: testio.NewBufCloser(nil),
 	}
 
-	bobSession.Rekey(priv, &peer, false)
+	bobSession.KeyExchange(priv, &peer, false)
 	aliceSession.Channel = bobSession.Channel
 	err = aliceSession.Send(testMessage)
 	if err != nil {
@@ -114,7 +114,7 @@ func TestSessionListen(t *testing.T) {
 		Channel: testio.NewBufCloser(nil),
 	}
 
-	bobSession.Rekey(priv, &peer, true)
+	bobSession.KeyExchange(priv, &peer, true)
 
 	aliceSession.Channel = bobSession.Channel
 	err = aliceSession.Send(testMessage)
