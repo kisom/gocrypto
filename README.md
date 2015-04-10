@@ -6,3 +6,5 @@ This is the example source code for my (in-progress) book,
 * chapter3: symmetric security
 * chapter4: key exchange
 * chapter5: digital signatures
+
+You can read the book [online](https://leanpub.com/gocrypto/read).
