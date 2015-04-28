@@ -15,7 +15,11 @@ var ErrKeyExchange = errors.New("key exchange failed")
 
 // ECDH computes a shared key from a private key and a peer's public key.
 func ECDH(priv *ecdsa.PrivateKey, pub *ecdsa.PublicKey) ([]byte, error) {
-	if priv.PublicKey.Curve != pub.Curve {
+	if pub == nil || priv == nil {
+		return nil, ErrKeyExchange
+	} else if priv.Curve != pub.Curve {
+		return nil, ErrKeyExchange
+	} else if !priv.Curve.IsOnCurve(pub.X, pub.Y) {
 		return nil, ErrKeyExchange
 	}
 
